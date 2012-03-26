@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>rene</title>
+    <script src="https://raw.github.com/mbostock/d3/master/d3.v2.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript" charset="utf-8" src="rene.js"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        function randomData() {
+            return d3.range(100).map(function() {
+                return [Math.round(Math.random() * 100), Math.round(Math.random() * 100)]
+            });
+        }
+
+        var data = randomData();
+
+
+    </script>
+    <style type="text/css" media="screen">
+        .plot {
+            width: 600px;
+            height: 400px;
+        }
+
+        path {
+            stroke: black;
+            fill: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="scatter"></div>
+
+    <script type="text/javascript" charset="utf-8">
+        var data = [[0,0], [1,1], [2,2], [3,3], [4,4], [5,5]];
+
+        var lineLayer = rene.line();
+        var scatterLayer = rene.scatter();
+        var plot = rene.plot()
+            .addLayer(lineLayer)
+            .addLayer(scatterLayer);
+
+        d3.select("#scatter")
+            .datum([data, data])
+            .call(plot)
+
+        setInterval(function() {
+            var remapped = data.map(function(c) { return [c[0] * Math.random(), c[1] * Math.random()]; });
+            var s = d3.select("#scatter");
+                s.datum([remapped, remapped]);
+                s.transition()
+                    .duration(1000)
+                    .call(plot);
+        }, 1800)
+    </script>
+</body>
+</html>
