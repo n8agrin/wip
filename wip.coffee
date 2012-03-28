@@ -18,12 +18,13 @@ rene =
     plot: ->
         chart = (selection) ->
             selection.each((datasets) ->
-                dthis = d3.select(this)
-                svg = dthis.selectAll("svg").data([datasets])
-                svg.enter().append("svg").attr("class", "plot")
+                svg = d3.select(this).selectAll("svg").data([datasets])
+                gEnter = svg.enter().append("svg").attr("class", "plot").append("g")
+                gEnter.append("g").attr("class", "x axis")
 
-                layers = svg.selectAll("g.layer").data(Object)
-                layers.enter().append("g").attr("class", (d, i) -> "layer layer" + i)
+                layers = svg.select("g").selectAll("g.layer").data(Object)
+                layers.enter().append("g").attr("class", "layer").attr("id", (d, i) -> "layer" + i)
+
 
                 # add the appropriate scales for each layer
                 for layer in attrs.layers
@@ -32,34 +33,45 @@ rene =
 
                 # train the scales with each layer of data
                 scales = {}
-                layers.each((data, i) ->
-                    console.log("training the scales!")
-
+                layers.each((d, i) ->
+                    console.log('layers data', d)
                     layer = attrs.layers[i]
                     for aesthetic, scale of attrs.scales
-
-                        # Instantiate the scale for this render
                         scale = scales[aesthetic] ||= scale()
                         if layer[aesthetic]
-                            layerData = data.map(layer[aesthetic]())
+                            layerData = d.map(layer[aesthetic]())
                             scaleData = scale.domain()
-                            console.log("layer", layerData, "scale", scaleData)
-                            scale.domain(d3.extent(layerData.concat(scaleData)))
+                            scale.domain(d3.extent(layerData.concat(scaleData))))
 
-                )
+                svgNode = svg.node()
+                margin = chart.margin()
+                panelWidth = svgNode.clientWidth - (margin.left + margin.right)
+                panelHeight = svgNode.clientHeight - (margin.top + margin.bottom)
 
                 # train the ranges
                 if scales.x
-                    scales.x.range([0, svg.node().clientWidth])
+                    scales.x.range([0, panelWidth])
+                    xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
 
                 if scales.y
-                    scales.y.range([svg.node().clientHeight, 0])
+                    scales.y.range([panelHeight, 0])
+                    yAxis = d3.svg.axis().scale(scales.y).orient("left")
+
+                # hey margins are good
+                layers.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
                 # render each layer
-                layers.each((data, i) -> d3.select(this).call(attrs.layers[i], scales))
+                layers.each((d, i) ->
+                    d3.select(this).call(attrs.layers[i], scales))
+
+                svg.select(".x.axis")
+                    .attr("transform", "translate(0," + scales.y.range()[0] + ")")
+                    .call(xAxis)
+
             )
 
         attrs =
+            margin: {top: 40, bottom: 40, left: 40, right: 40}
             layers: []
             scales: {}
             size: []
@@ -69,6 +81,7 @@ rene =
         _a = attrAccessor.bind(attrs, chart)
 
         chart.size  = _a("size")
+        chart.margin = _a("margin")
 
         chart.addLayer = (layer) ->
             attrs.layers.push(layer)
@@ -126,7 +139,50 @@ rene =
                 linesExit = d3.transition(lines.exit())
                 linesUpdate = d3.transition(lines)
 
-                pathFn = d3.svg.line().interpolate("basis")
+                pathFn = d3.svg.line().interpolate(layer.interpolate())
+                     .x((d) -> scales.x(layer.x()(d)))
+                     .y((d) -> scales.y(layer.y()(d)))
+
+                linesUpdate.attr("d", pathFn)
+            )
+
+        attrs =
+            x: (d) -> d[0]
+            y: (d) -> d[1]
+            color: (d) -> d[2]
+            size: (d) -> d[3]
+            interpolate: "cardinal"
+
+        scales =
+            x: d3.scale.linear
+            y: d3.scale.linear
+            color: d3.scale.category20
+            size: d3.scale.linear
+
+        _a = attrAccessor.bind(attrs, layer)
+
+        layer.x = _a("x")
+        layer.y = _a("y")
+        layer.color = _a("color")
+        layer.size = _a("size")
+        layer.interpolate = _a("interpolate")
+
+        layer.scales = ->
+            scales
+
+        return layer
+
+    area: ->
+        layer = (g, scales) ->
+            g.each((data)->
+
+                g = d3.select(this)
+                lines = g.selectAll("path").data([g.datum()])
+                linesEnter = lines.enter().append("path")
+                linesExit = d3.transition(lines.exit())
+                linesUpdate = d3.transition(lines)
+
+                pathFn = d3.svg.area().interpolate("basis")
                      .x((d) -> scales.x(layer.x()(d)))
                      .y((d) -> scales.y(layer.y()(d)))
 
@@ -151,6 +207,85 @@ rene =
         layer.y = _a("y")
         layer.color = _a("color")
         layer.size = _a("size")
+
+        layer.scales = ->
+            scales
+
+        return layer
+
+    bar: ->
+        layer = (g, scales) ->
+            g.each((data)->
+
+                g = d3.select(this)
+                lines = g.selectAll("path").data([g.datum()])
+                linesEnter = lines.enter().append("path")
+                linesExit = d3.transition(lines.exit())
+                linesUpdate = d3.transition(lines)
+
+                pathFn = d3.svg.area().interpolate("basis")
+                     .x((d) -> scales.x(layer.x()(d)))
+                     .y((d) -> scales.y(layer.y()(d)))
+
+                linesUpdate.attr("d", pathFn)
+            )
+
+        attrs =
+            x: (d) -> d[0]
+            y: (d) -> d[1]
+            color: (d) -> d[2]
+            size: (d) -> d[3]
+
+        scales =
+            x: d3.scale.linear
+            y: d3.scale.linear
+            color: d3.scale.category20
+            size: d3.scale.linear
+
+        _a = attrAccessor.bind(attrs, layer)
+
+        layer.x = _a("x")
+        layer.y = _a("y")
+        layer.color = _a("color")
+        layer.size = _a("size")
+
+        layer.scales = ->
+            scales
+
+        return layer
+
+    rline: ->
+        layer = (g, scales) ->
+            g.each((data)->
+                g = d3.select(this)
+                lines = g.selectAll("path").data([g.datum()])
+                linesEnter = lines.enter().append("path")
+                linesExit = d3.transition(lines.exit())
+                linesUpdate = d3.transition(lines)
+                pathFn = d3.svg.line.radial()
+                linesUpdate.attr("d", pathFn)
+            )
+
+        attrs =
+            x: (d) -> d[0]
+            y: (d) -> d[1]
+            color: (d) -> d[2]
+            size: (d) -> d[3]
+            interpolate: "basis"
+
+        scales =
+            x: d3.scale.linear
+            y: d3.scale.linear
+            color: d3.scale.category20
+            size: d3.scale.linear
+
+        _a = attrAccessor.bind(attrs, layer)
+
+        layer.x = _a("x")
+        layer.y = _a("y")
+        layer.color = _a("color")
+        layer.size = _a("size")
+        layer.interpolate = _a("interpolate")
 
         layer.scales = ->
             scales

@@ -4,7 +4,7 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <title>rene</title>
     <script src="https://raw.github.com/mbostock/d3/master/d3.v2.js" type="text/javascript" charset="utf-8"></script>
-    <script type="text/javascript" charset="utf-8" src="rene.js"></script>
+    <script type="text/javascript" charset="utf-8" src="wip.js"></script>
 
     <script type="text/javascript" charset="utf-8">
         function randomData() {
@@ -21,6 +21,7 @@
         .plot {
             width: 600px;
             height: 400px;
+            border: 1px dotted purple;
         }
 
         path {
@@ -33,9 +34,8 @@
     <div id="scatter"></div>
 
     <script type="text/javascript" charset="utf-8">
-        var data = [[0,0], [1,1], [2,2], [3,3], [4,4], [5,5]];
-
-        var lineLayer = rene.line();
+        var data = [[0,0], [1, 1], [2,2], [3, 3], [3,3], [4,4], [5,5]];
+        var lineLayer = rene.line().interpolate("cardinal");
         var scatterLayer = rene.scatter();
         var plot = rene.plot()
             .addLayer(lineLayer)
@@ -47,6 +47,8 @@
 
         setInterval(function() {
             var remapped = data.map(function(c) { return [c[0] * Math.random(), c[1] * Math.random()]; });
+            console.log('remapped', remapped)
+
             var s = d3.select("#scatter");
                 s.datum([remapped, remapped]);
                 s.transition()

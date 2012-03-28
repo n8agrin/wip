@@ -17,13 +17,13 @@
       var attrs, chart, _a;
       chart = function(selection) {
         return selection.each(function(datasets) {
-          var aesthetic, dthis, layer, layers, scale, scales, svg, _base, _i, _len, _ref, _ref2;
-          dthis = d3.select(this);
-          svg = dthis.selectAll("svg").data([datasets]);
-          svg.enter().append("svg").attr("class", "plot");
-          layers = svg.selectAll("g.layer").data(Object);
-          layers.enter().append("g").attr("class", function(d, i) {
-            return "layer layer" + i;
+          var aesthetic, gEnter, layer, layers, margin, panelHeight, panelWidth, scale, scales, svg, svgNode, xAxis, yAxis, _base, _i, _len, _ref, _ref2;
+          svg = d3.select(this).selectAll("svg").data([datasets]);
+          gEnter = svg.enter().append("svg").attr("class", "plot").append("g");
+          gEnter.append("g").attr("class", "x axis");
+          layers = svg.select("g").selectAll("g.layer").data(Object);
+          layers.enter().append("g").attr("class", "layer").attr("id", function(d, i) {
+            return "layer" + i;
           });
           _ref = attrs.layers;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -35,9 +35,9 @@
             }
           }
           scales = {};
-          layers.each(function(data, i) {
+          layers.each(function(d, i) {
             var aesthetic, layerData, scale, scaleData, _ref3, _results;
-            console.log("training the scales!");
+            console.log('layers data', d);
             layer = attrs.layers[i];
             _ref3 = attrs.scales;
             _results = [];
@@ -45,9 +45,8 @@
               scale = _ref3[aesthetic];
               scale = scales[aesthetic] || (scales[aesthetic] = scale());
               if (layer[aesthetic]) {
-                layerData = data.map(layer[aesthetic]());
+                layerData = d.map(layer[aesthetic]());
                 scaleData = scale.domain();
-                console.log("layer", layerData, "scale", scaleData);
                 _results.push(scale.domain(d3.extent(layerData.concat(scaleData))));
               } else {
                 _results.push(void 0);
@@ -55,14 +54,32 @@
             }
             return _results;
           });
-          if (scales.x) scales.x.range([0, svg.node().clientWidth]);
-          if (scales.y) scales.y.range([svg.node().clientHeight, 0]);
-          return layers.each(function(data, i) {
+          svgNode = svg.node();
+          margin = chart.margin();
+          panelWidth = svgNode.clientWidth - (margin.left + margin.right);
+          panelHeight = svgNode.clientHeight - (margin.top + margin.bottom);
+          if (scales.x) {
+            scales.x.range([0, panelWidth]);
+            xAxis = d3.svg.axis().scale(scales.x).orient("bottom");
+          }
+          if (scales.y) {
+            scales.y.range([panelHeight, 0]);
+            yAxis = d3.svg.axis().scale(scales.y).orient("left");
+          }
+          layers.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          layers.each(function(d, i) {
             return d3.select(this).call(attrs.layers[i], scales);
           });
+          return svg.select(".x.axis").attr("transform", "translate(0," + scales.y.range()[0] + ")").call(xAxis);
         });
       };
       attrs = {
+        margin: {
+          top: 40,
+          bottom: 40,
+          left: 40,
+          right: 40
+        },
         layers: [],
         scales: {},
         size: []
@@ -70,6 +87,7 @@
       chart.attrs = attrs;
       _a = attrAccessor.bind(attrs, chart);
       chart.size = _a("size");
+      chart.margin = _a("margin");
       chart.addLayer = function(layer) {
         attrs.layers.push(layer);
         return chart;
@@ -133,7 +151,57 @@
           linesEnter = lines.enter().append("path");
           linesExit = d3.transition(lines.exit());
           linesUpdate = d3.transition(lines);
-          pathFn = d3.svg.line().interpolate("basis").x(function(d) {
+          pathFn = d3.svg.line().interpolate(layer.interpolate()).x(function(d) {
+            return scales.x(layer.x()(d));
+          }).y(function(d) {
+            return scales.y(layer.y()(d));
+          });
+          return linesUpdate.attr("d", pathFn);
+        });
+      };
+      attrs = {
+        x: function(d) {
+          return d[0];
+        },
+        y: function(d) {
+          return d[1];
+        },
+        color: function(d) {
+          return d[2];
+        },
+        size: function(d) {
+          return d[3];
+        },
+        interpolate: "cardinal"
+      };
+      scales = {
+        x: d3.scale.linear,
+        y: d3.scale.linear,
+        color: d3.scale.category20,
+        size: d3.scale.linear
+      };
+      _a = attrAccessor.bind(attrs, layer);
+      layer.x = _a("x");
+      layer.y = _a("y");
+      layer.color = _a("color");
+      layer.size = _a("size");
+      layer.interpolate = _a("interpolate");
+      layer.scales = function() {
+        return scales;
+      };
+      return layer;
+    },
+    area: function() {
+      var attrs, layer, scales, _a;
+      layer = function(g, scales) {
+        return g.each(function(data) {
+          var lines, linesEnter, linesExit, linesUpdate, pathFn;
+          g = d3.select(this);
+          lines = g.selectAll("path").data([g.datum()]);
+          linesEnter = lines.enter().append("path");
+          linesExit = d3.transition(lines.exit());
+          linesUpdate = d3.transition(lines);
+          pathFn = d3.svg.area().interpolate("basis").x(function(d) {
             return scales.x(layer.x()(d));
           }).y(function(d) {
             return scales.y(layer.y()(d));
@@ -166,6 +234,100 @@
       layer.y = _a("y");
       layer.color = _a("color");
       layer.size = _a("size");
+      layer.scales = function() {
+        return scales;
+      };
+      return layer;
+    },
+    bar: function() {
+      var attrs, layer, scales, _a;
+      layer = function(g, scales) {
+        return g.each(function(data) {
+          var lines, linesEnter, linesExit, linesUpdate, pathFn;
+          g = d3.select(this);
+          lines = g.selectAll("path").data([g.datum()]);
+          linesEnter = lines.enter().append("path");
+          linesExit = d3.transition(lines.exit());
+          linesUpdate = d3.transition(lines);
+          pathFn = d3.svg.area().interpolate("basis").x(function(d) {
+            return scales.x(layer.x()(d));
+          }).y(function(d) {
+            return scales.y(layer.y()(d));
+          });
+          return linesUpdate.attr("d", pathFn);
+        });
+      };
+      attrs = {
+        x: function(d) {
+          return d[0];
+        },
+        y: function(d) {
+          return d[1];
+        },
+        color: function(d) {
+          return d[2];
+        },
+        size: function(d) {
+          return d[3];
+        }
+      };
+      scales = {
+        x: d3.scale.linear,
+        y: d3.scale.linear,
+        color: d3.scale.category20,
+        size: d3.scale.linear
+      };
+      _a = attrAccessor.bind(attrs, layer);
+      layer.x = _a("x");
+      layer.y = _a("y");
+      layer.color = _a("color");
+      layer.size = _a("size");
+      layer.scales = function() {
+        return scales;
+      };
+      return layer;
+    },
+    rline: function() {
+      var attrs, layer, scales, _a;
+      layer = function(g, scales) {
+        return g.each(function(data) {
+          var lines, linesEnter, linesExit, linesUpdate, pathFn;
+          g = d3.select(this);
+          lines = g.selectAll("path").data([g.datum()]);
+          linesEnter = lines.enter().append("path");
+          linesExit = d3.transition(lines.exit());
+          linesUpdate = d3.transition(lines);
+          pathFn = d3.svg.line.radial();
+          return linesUpdate.attr("d", pathFn);
+        });
+      };
+      attrs = {
+        x: function(d) {
+          return d[0];
+        },
+        y: function(d) {
+          return d[1];
+        },
+        color: function(d) {
+          return d[2];
+        },
+        size: function(d) {
+          return d[3];
+        },
+        interpolate: "basis"
+      };
+      scales = {
+        x: d3.scale.linear,
+        y: d3.scale.linear,
+        color: d3.scale.category20,
+        size: d3.scale.linear
+      };
+      _a = attrAccessor.bind(attrs, layer);
+      layer.x = _a("x");
+      layer.y = _a("y");
+      layer.color = _a("color");
+      layer.size = _a("size");
+      layer.interpolate = _a("interpolate");
       layer.scales = function() {
         return scales;
       };
