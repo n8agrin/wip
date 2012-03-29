@@ -32,6 +32,7 @@
 </head>
 <body>
     <div id="scatter"></div>
+    <div id="pie"></div>
 
     <script type="text/javascript" charset="utf-8">
         var data = [[0,0], [1, 1], [2,2], [3, 3], [3,3], [4,4], [5,5]];
@@ -41,20 +42,27 @@
             .addLayer(lineLayer)
             .addLayer(scatterLayer);
 
-        d3.select("#scatter")
-            .datum([data, data])
-            .call(plot)
+        var pie = rene.plot()
+            .addLayer(rene.pie());
 
-        setInterval(function() {
-            var remapped = data.map(function(c) { return [c[0] * Math.random(), c[1] * Math.random()]; });
-            console.log('remapped', remapped)
+        // d3.select("#scatter")
+        //     .datum([data, data])
+        //     .call(plot);
 
-            var s = d3.select("#scatter");
-                s.datum([remapped, remapped]);
-                s.transition()
-                    .duration(1000)
-                    .call(plot);
-        }, 1800)
+        d3.select("#pie")
+            .datum([[10,20,30,40,50]])
+            .call(pie);
+
+        // setInterval(function() {
+        //     var remapped = data.map(function(c) { return [c[0] * Math.random(), c[1] * Math.random()]; });
+        //     console.log('remapped', remapped)
+        //
+        //     var s = d3.select("#scatter");
+        //         s.datum([remapped, remapped]);
+        //         s.transition()
+        //             .duration(1000)
+        //             .call(plot);
+        // }, 1800)
     </script>
 </body>
 </html>

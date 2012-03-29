@@ -52,6 +52,9 @@ rene =
                 if scales.x
                     scales.x.range([0, panelWidth])
                     xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
+                    svg.select(".x.axis")
+                        .attr("transform", "translate(0," + scales.y.range()[0] + ")")
+                        .call(xAxis)
 
                 if scales.y
                     scales.y.range([panelHeight, 0])
@@ -63,10 +66,6 @@ rene =
                 # render each layer
                 layers.each((d, i) ->
                     d3.select(this).call(attrs.layers[i], scales))
-
-                svg.select(".x.axis")
-                    .attr("transform", "translate(0," + scales.y.range()[0] + ")")
-                    .call(xAxis)
 
             )
 
@@ -86,6 +85,8 @@ rene =
         chart.addLayer = (layer) ->
             attrs.layers.push(layer)
             chart
+
+        chart.layers = chart.addLayer
 
         return chart
 
@@ -216,7 +217,6 @@ rene =
     bar: ->
         layer = (g, scales) ->
             g.each((data)->
-
                 g = d3.select(this)
                 lines = g.selectAll("path").data([g.datum()])
                 linesEnter = lines.enter().append("path")
@@ -254,43 +254,34 @@ rene =
 
         return layer
 
-    rline: ->
+    pie: ->
         layer = (g, scales) ->
-            g.each((data)->
+            g.each((d) ->
                 g = d3.select(this)
-                lines = g.selectAll("path").data([g.datum()])
-                linesEnter = lines.enter().append("path")
-                linesExit = d3.transition(lines.exit())
-                linesUpdate = d3.transition(lines)
-                pathFn = d3.svg.line.radial()
-                linesUpdate.attr("d", pathFn)
+                arcs = g.selectAll("path.arc").data((d) -> console.log('p d', d, layer.pie()(d)); layer.pie()(d))
+                arcsEnter = arcs.enter().append("path").attr("class", "arc")
+                arcsExit = d3.transition(arcs.exit()).remove()
+                arcsUpdate = d3.transition(arcs)
+                debugger
+                arcsUpdate.attr("d", layer.arc())
             )
 
+        scales = {}
+
         attrs =
-            x: (d) -> d[0]
-            y: (d) -> d[1]
-            color: (d) -> d[2]
-            size: (d) -> d[3]
-            interpolate: "basis"
+            outerRadius: 200
+            innerRadius: 50
+            arc: d3.svg.arc()
+            pie: d3.layout.pie()
 
-        scales =
-            x: d3.scale.linear
-            y: d3.scale.linear
-            color: d3.scale.category20
-            size: d3.scale.linear
+        AA = attrAccessor.bind(attrs, layer)
+        layer.outerRadius = AA("outerRadius")
+        layer.innerRadius = AA("innerRadius")
+        layer.arc = AA("arc")
+        layer.pie = AA("pie")
+        layer.scales = -> scales
 
-        _a = attrAccessor.bind(attrs, layer)
-
-        layer.x = _a("x")
-        layer.y = _a("y")
-        layer.color = _a("color")
-        layer.size = _a("size")
-        layer.interpolate = _a("interpolate")
-
-        layer.scales = ->
-            scales
-
-        return layer
+        layer
 
 if module?
     module.exports = rene

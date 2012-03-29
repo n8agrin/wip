@@ -61,16 +61,16 @@
           if (scales.x) {
             scales.x.range([0, panelWidth]);
             xAxis = d3.svg.axis().scale(scales.x).orient("bottom");
+            svg.select(".x.axis").attr("transform", "translate(0," + scales.y.range()[0] + ")").call(xAxis);
           }
           if (scales.y) {
             scales.y.range([panelHeight, 0]);
             yAxis = d3.svg.axis().scale(scales.y).orient("left");
           }
           layers.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-          layers.each(function(d, i) {
+          return layers.each(function(d, i) {
             return d3.select(this).call(attrs.layers[i], scales);
           });
-          return svg.select(".x.axis").attr("transform", "translate(0," + scales.y.range()[0] + ")").call(xAxis);
         });
       };
       attrs = {
@@ -92,6 +92,7 @@
         attrs.layers.push(layer);
         return chart;
       };
+      chart.layers = chart.addLayer;
       return chart;
     },
     scatter: function() {
@@ -287,47 +288,35 @@
       };
       return layer;
     },
-    rline: function() {
-      var attrs, layer, scales, _a;
+    pie: function() {
+      var AA, attrs, layer, scales;
       layer = function(g, scales) {
-        return g.each(function(data) {
-          var lines, linesEnter, linesExit, linesUpdate, pathFn;
+        return g.each(function(d) {
+          var arcs, arcsEnter, arcsExit, arcsUpdate;
           g = d3.select(this);
-          lines = g.selectAll("path").data([g.datum()]);
-          linesEnter = lines.enter().append("path");
-          linesExit = d3.transition(lines.exit());
-          linesUpdate = d3.transition(lines);
-          pathFn = d3.svg.line.radial();
-          return linesUpdate.attr("d", pathFn);
+          arcs = g.selectAll("path.arc").data(function(d) {
+            console.log('p d', d, layer.pie()(d));
+            return layer.pie()(d);
+          });
+          arcsEnter = arcs.enter().append("path").attr("class", "arc");
+          arcsExit = d3.transition(arcs.exit()).remove();
+          arcsUpdate = d3.transition(arcs);
+          debugger;
+          return arcsUpdate.attr("d", layer.arc());
         });
       };
+      scales = {};
       attrs = {
-        x: function(d) {
-          return d[0];
-        },
-        y: function(d) {
-          return d[1];
-        },
-        color: function(d) {
-          return d[2];
-        },
-        size: function(d) {
-          return d[3];
-        },
-        interpolate: "basis"
+        outerRadius: 200,
+        innerRadius: 50,
+        arc: d3.svg.arc(),
+        pie: d3.layout.pie()
       };
-      scales = {
-        x: d3.scale.linear,
-        y: d3.scale.linear,
-        color: d3.scale.category20,
-        size: d3.scale.linear
-      };
-      _a = attrAccessor.bind(attrs, layer);
-      layer.x = _a("x");
-      layer.y = _a("y");
-      layer.color = _a("color");
-      layer.size = _a("size");
-      layer.interpolate = _a("interpolate");
+      AA = attrAccessor.bind(attrs, layer);
+      layer.outerRadius = AA("outerRadius");
+      layer.innerRadius = AA("innerRadius");
+      layer.arc = AA("arc");
+      layer.pie = AA("pie");
       layer.scales = function() {
         return scales;
       };
