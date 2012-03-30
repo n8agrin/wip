@@ -1,5 +1,5 @@
 (function() {
-  var attrAccessor, ordinalScales, rene;
+  var attrAccessor, ordinalScales, rene, utils;
 
   attrAccessor = function(retval, name) {
     var _this = this;
@@ -12,12 +12,18 @@
 
   ordinalScales = [d3.scale.ordinal, d3.scale.category10, d3.scale.category20, d3.scale.category20b, d3.scale.category20c];
 
+  utils = {
+    translate: function(x, y) {
+      return ["translate(", String(x), ",", String(y), ")"].join("");
+    }
+  };
+
   rene = {
     plot: function() {
-      var attrs, chart, _a;
+      var AA, attrs, chart;
       chart = function(selection) {
         return selection.each(function(datasets) {
-          var aesthetic, gEnter, layer, layers, margin, panelHeight, panelWidth, scale, scales, svg, svgNode, xAxis, yAxis, _base, _i, _len, _ref, _ref2;
+          var aesthetic, gEnter, layer, layers, panelHeight, panelWidth, scale, scales, svg, svgNode, xAxis, yAxis, _base, _i, _len, _ref, _ref2;
           svg = d3.select(this).selectAll("svg").data([datasets]);
           gEnter = svg.enter().append("svg").attr("class", "plot").append("g");
           gEnter.append("g").attr("class", "x axis");
@@ -37,7 +43,6 @@
           scales = {};
           layers.each(function(d, i) {
             var aesthetic, layerData, scale, scaleData, _ref3, _results;
-            console.log('layers data', d);
             layer = attrs.layers[i];
             _ref3 = attrs.scales;
             _results = [];
@@ -55,45 +60,52 @@
             return _results;
           });
           svgNode = svg.node();
-          margin = chart.margin();
-          svgNode.__margin__ = margin;
-          panelWidth = svgNode.clientWidth - (margin.left + margin.right);
-          panelHeight = svgNode.clientHeight - (margin.top + margin.bottom);
+          panelWidth = svgNode.clientWidth - (attrs.margin.left + attrs.margin.right);
+          panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom);
           if (scales.x) {
             scales.x.range([0, panelWidth]);
             xAxis = d3.svg.axis().scale(scales.x).orient("bottom");
-            svg.select(".x.axis").attr("transform", "translate(0," + scales.y.range()[0] + ")").call(xAxis);
+            svg.select(".x.axis").attr("transform", utils.translate(0, panelWidth)).call(xAxis);
           }
           if (scales.y) {
             scales.y.range([panelHeight, 0]);
             yAxis = d3.svg.axis().scale(scales.y).orient("left");
           }
-          svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-          return layers.each(function(d, i) {
-            return d3.select(this).transition().delay(500 * i).call(attrs.layers[i], scales);
+          svg.select("g").attr("transform", utils.translate(margin.left, margin.top));
+          layers.each(function(d, i) {
+            return d3.select(this).transition().duration(attrs.layerDuration).delay(attrs.layerDelay * i).call(attrs.layers[i], scales);
           });
+          layers.each(function(d, i) {
+            return attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin);
+          });
+          return attrs.legend.call(chart, layers, scales);
         });
       };
       attrs = {
         margin: {
-          top: 40,
-          bottom: 40,
-          left: 40,
-          right: 40
+          top: 20,
+          bottom: 20,
+          left: 20,
+          right: 20
         },
         layers: [],
         scales: {},
-        size: []
+        size: [],
+        layerDuration: 500,
+        layerDelay: 200,
+        legend: function() {}
       };
-      chart.attrs = attrs;
-      _a = attrAccessor.bind(attrs, chart);
-      chart.size = _a("size");
-      chart.margin = _a("margin");
+      AA = attrAccessor.bind(attrs, chart);
+      chart.size = AA("size");
+      chart.margin = AA("margin");
+      chart.layerDuration = AA("layerDuration");
+      chart.layerDelay = AA("layerDelay");
+      chart.legend = AA("legend");
+      chart.scales = AA("scales");
       chart.addLayer = function(layer) {
         attrs.layers.push(layer);
         return chart;
       };
-      chart.layers = chart.addLayer;
       return chart;
     },
     scatter: function() {
@@ -333,7 +345,9 @@
       layer.position = function(layer, width, height, margins) {
         switch (attrs.location) {
           case "center":
-            return layer.attr("transform", "translate(" + (width / 2) - attrs.outerRadius + "," + (height / 2) - attrs.outerRadius + ")");
+            return layer.attr("transform", utils.translate(width / 2, height / 2));
+          case "left":
+            return layer.attr("transform", utils.translate(attrs.outerRadius, height / 2));
         }
       };
       return layer;

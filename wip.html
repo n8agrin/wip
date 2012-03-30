@@ -23,12 +23,42 @@
             height: 400px;
             border: 1px dotted purple;
         }
+
+        #pie {
+            position: relative;
+        }
+
+        #pie-legend {
+            position: absolute;
+        }
+
+        #pie-legend ul {
+            padding: 0;
+            margin: 1em;
+        }
+
+        #pie-legend li {
+            list-style-type: none;
+        }
+
+        #pie-legend div {
+            display: inline-block;
+        }
+
+        #pie-legend div.icon {
+            width: 10px;
+            height: 10px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
     <div id="scatter"></div>
-    <div id="pie"></div>
-
+    <div id="pie">
+        <div id="pie-legend">
+            <ul></ul>
+        </div>
+    </div>
     <script type="text/javascript" charset="utf-8">
         var data = [[0,0], [1, 1], [2,2], [3, 3], [3,3], [4,4], [5,5]];
         var lineLayer = rene.line().interpolate("cardinal");
@@ -37,16 +67,6 @@
             .addLayer(lineLayer)
             .addLayer(scatterLayer);
 
-
-        var p1 = rene.pie()
-            .innerRadius(10)
-            .outerRadius(50);
-        var p2 = rene.pie()
-            .innerRadius(60)
-            .outerRadius(110);
-        var pie = rene.plot()
-            .addLayer(p1)
-            .addLayer(p2);
 
         // d3.select("#scatter")
         //     .datum([data, data])
@@ -63,24 +83,56 @@
         //             .call(plot);
         // }, 1800)
 
+        var p1 = rene.pie()
+            .innerRadius(10)
+            .outerRadius(50);
+
+        var p2 = rene.pie()
+            .innerRadius(30)
+            .outerRadius(110);
+
+        var pie = rene.plot()
+            .addLayer(p2)
+            .legend(function(layers, scales) {
+                var legendUl = d3.select("#pie-legend ul");
+                var lis = legendUl.selectAll("li")
+                    .data(layers.datum());
+
+                var lisEnter = lis.enter()
+                        .append("li")
+                        .style("opacity", 1e-6);
+
+                    lisEnter.append("div")
+                        .classed("icon", true);
+
+                    lisEnter.append("div")
+                        .classed("text", true)
+                        .text(function(d) {
+                            return d;
+                        });
+
+                lis.selectAll("div.icon")
+                    .style("background", function(d) { return scales.color(d) });
+
+                d3.transition(lis)
+                    .style("opacity", 1);
+            });
+
         var pieData = [10,20,30,40,50];
         var pieData2 = [150,400,500];
         d3.select("#pie")
-            .datum([pieData, pieData2])
-            .transition()
-            .duration(1000)
-            .delay(1000)
+            .datum([pieData])
             .call(pie);
 
         // setInterval(function() {
         //     var remapped = pieData.map(function(c) { return c * Math.floor((Math.random() * 50)); });
-        //     var remapped2 = pieData2.map(function(c) { return c * Math.floor((Math.random() * 50)); });
+        //     // var remapped2 = pieData2.map(function(c) { return c * Math.floor((Math.random() * 50)); });
         //     var s = d3.select("#pie");
-        //         s.datum([remapped, remapped2]);
+        //         s.data([[remapped]]);
         //         s.transition()
         //             .duration(1000)
         //             .call(pie);
-        // }, 1800)
+        // }, 2000)
     </script>
 </body>
 </html>

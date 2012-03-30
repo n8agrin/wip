@@ -13,6 +13,10 @@ ordinalScales = [
     d3.scale.category20c
 ]
 
+utils =
+    translate: (x, y) ->
+        ["translate(", String(x), ",", String(y), ")"].join("")
+
 rene =
 
     plot: ->
@@ -25,7 +29,6 @@ rene =
                 layers = svg.select("g").selectAll("g.layer").data(Object)
                 layers.enter().append("g").attr("class", "layer").attr("id", (d, i) -> "layer" + i)
 
-
                 # add the appropriate scales for each layer
                 for layer in attrs.layers
                     for aesthetic, scale of layer.scales()
@@ -34,7 +37,6 @@ rene =
                 # train the scales with each layer of data
                 scales = {}
                 layers.each((d, i) ->
-                    console.log('layers data', d)
                     layer = attrs.layers[i]
                     for aesthetic, scale of attrs.scales
                         scale = scales[aesthetic] ||= scale()
@@ -44,17 +46,15 @@ rene =
                             scale.domain(d3.extent(layerData.concat(scaleData))))
 
                 svgNode = svg.node()
-                margin = chart.margin()
-                svgNode.__margin__ = margin
-                panelWidth = svgNode.clientWidth - (margin.left + margin.right)
-                panelHeight = svgNode.clientHeight - (margin.top + margin.bottom)
+                panelWidth = svgNode.clientWidth - (attrs.margin.left + attrs.margin.right)
+                panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom)
 
                 # train the ranges
                 if scales.x
                     scales.x.range([0, panelWidth])
                     xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
                     svg.select(".x.axis")
-                        .attr("transform", "translate(0," + scales.y.range()[0] + ")")
+                        .attr("transform", utils.translate(0, panelWidth))
                         .call(xAxis)
 
                 if scales.y
@@ -62,32 +62,41 @@ rene =
                     yAxis = d3.svg.axis().scale(scales.y).orient("left")
 
                 # hey margins are good
-                svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                svg.select("g").attr("transform", utils.translate(margin.left, margin.top))
 
                 # render each layer
                 layers.each((d, i) ->
-                    d3.select(this).transition().delay(500 * i).call(attrs.layers[i], scales))
+                    d3.select(this).transition()
+                        .duration(attrs.layerDuration)
+                        .delay(attrs.layerDelay * i)
+                        .call(attrs.layers[i], scales))
 
+                layers.each((d, i) ->
+                    attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin))
+
+                attrs.legend.call(chart, layers, scales)
             )
 
         attrs =
-            margin: {top: 40, bottom: 40, left: 40, right: 40}
+            margin: {top: 20, bottom: 20, left: 20, right: 20}
             layers: []
             scales: {}
             size: []
+            layerDuration: 500
+            layerDelay: 200
+            legend: ->
 
-        chart.attrs = attrs
-
-        _a = attrAccessor.bind(attrs, chart)
-
-        chart.size  = _a("size")
-        chart.margin = _a("margin")
+        AA = attrAccessor.bind(attrs, chart)
+        chart.size  = AA("size")
+        chart.margin = AA("margin")
+        chart.layerDuration = AA("layerDuration")
+        chart.layerDelay = AA("layerDelay")
+        chart.legend = AA("legend")
+        chart.scales = AA("scales")
 
         chart.addLayer = (layer) ->
             attrs.layers.push(layer)
             chart
-
-        chart.layers = chart.addLayer
 
         return chart
 
@@ -281,9 +290,6 @@ rene =
                 # Apply the color styling
                 arcsUpdate.attr("d", arc)
                     .attr("fill", (point, index) -> scales.color(attrs.color(point, index)))
-
-
-
             )
 
         scales =
@@ -309,8 +315,9 @@ rene =
         layer.position = (layer, width, height, margins) ->
             switch attrs.location
                 when "center"
-                    layer.attr("transform", "translate(" + (width / 2) - attrs.outerRadius + "," + (height / 2) - attrs.outerRadius + ")")
-
+                    layer.attr("transform", utils.translate(width / 2, height / 2))
+                when "left"
+                    layer.attr("transform", utils.translate(attrs.outerRadius, height / 2))
 
         layer
 
