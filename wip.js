@@ -56,6 +56,7 @@
           });
           svgNode = svg.node();
           margin = chart.margin();
+          svgNode.__margin__ = margin;
           panelWidth = svgNode.clientWidth - (margin.left + margin.right);
           panelHeight = svgNode.clientHeight - (margin.top + margin.bottom);
           if (scales.x) {
@@ -67,9 +68,9 @@
             scales.y.range([panelHeight, 0]);
             yAxis = d3.svg.axis().scale(scales.y).orient("left");
           }
-          layers.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+          svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
           return layers.each(function(d, i) {
-            return d3.select(this).call(attrs.layers[i], scales);
+            return d3.select(this).transition().delay(500 * i).call(attrs.layers[i], scales);
           });
         });
       };
@@ -291,34 +292,49 @@
     pie: function() {
       var AA, attrs, layer, scales;
       layer = function(g, scales) {
-        return g.each(function(d) {
-          var arcs, arcsEnter, arcsExit, arcsUpdate;
-          g = d3.select(this);
-          arcs = g.selectAll("path.arc").data(function(d) {
-            console.log('p d', d, layer.pie()(d));
-            return layer.pie()(d);
+        return g.each(function(d, i) {
+          var arc, arcs, arcsEnter, arcsExit, arcsUpdate, pie;
+          pie = attrs.pie;
+          arc = attrs.arc.outerRadius(layer.outerRadius()).innerRadius(layer.innerRadius());
+          g = d3.select(this).classed("pie", true);
+          arcs = g.selectAll("path.arc").data(pie);
+          arcsEnter = arcs.enter().append("path").attr("class", "arc").style("opacity", 1e-6);
+          arcsExit = d3.transition(arcs.exit()).style("opacity", 1e-6).remove();
+          arcsUpdate = d3.transition(arcs).style("opacity", 1);
+          return arcsUpdate.attr("d", arc).attr("fill", function(point, index) {
+            return scales.color(attrs.color(point, index));
           });
-          arcsEnter = arcs.enter().append("path").attr("class", "arc");
-          arcsExit = d3.transition(arcs.exit()).remove();
-          arcsUpdate = d3.transition(arcs);
-          debugger;
-          return arcsUpdate.attr("d", layer.arc());
         });
       };
-      scales = {};
+      scales = {
+        color: d3.scale.category20
+      };
       attrs = {
-        outerRadius: 200,
-        innerRadius: 50,
+        outerRadius: 100,
+        innerRadius: 10,
+        location: "center",
+        locationMargin: 10,
         arc: d3.svg.arc(),
-        pie: d3.layout.pie()
+        pie: d3.layout.pie(),
+        color: function(point, pointIndex) {
+          return point.data;
+        }
       };
       AA = attrAccessor.bind(attrs, layer);
       layer.outerRadius = AA("outerRadius");
       layer.innerRadius = AA("innerRadius");
       layer.arc = AA("arc");
       layer.pie = AA("pie");
+      layer.location = AA("location");
+      layer.color = AA("color");
       layer.scales = function() {
         return scales;
+      };
+      layer.position = function(layer, width, height, margins) {
+        switch (attrs.location) {
+          case "center":
+            return layer.attr("transform", "translate(" + (width / 2) - attrs.outerRadius + "," + (height / 2) - attrs.outerRadius + ")");
+        }
       };
       return layer;
     }

@@ -45,6 +45,7 @@ rene =
 
                 svgNode = svg.node()
                 margin = chart.margin()
+                svgNode.__margin__ = margin
                 panelWidth = svgNode.clientWidth - (margin.left + margin.right)
                 panelHeight = svgNode.clientHeight - (margin.top + margin.bottom)
 
@@ -61,11 +62,11 @@ rene =
                     yAxis = d3.svg.axis().scale(scales.y).orient("left")
 
                 # hey margins are good
-                layers.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
                 # render each layer
                 layers.each((d, i) ->
-                    d3.select(this).call(attrs.layers[i], scales))
+                    d3.select(this).transition().delay(500 * i).call(attrs.layers[i], scales))
 
             )
 
@@ -256,30 +257,60 @@ rene =
 
     pie: ->
         layer = (g, scales) ->
-            g.each((d) ->
-                g = d3.select(this)
-                arcs = g.selectAll("path.arc").data((d) -> console.log('p d', d, layer.pie()(d)); layer.pie()(d))
-                arcsEnter = arcs.enter().append("path").attr("class", "arc")
-                arcsExit = d3.transition(arcs.exit()).remove()
+            g.each((d, i) ->
+                pie = attrs.pie
+                arc = attrs.arc.outerRadius(layer.outerRadius()).innerRadius(layer.innerRadius())
+
+                g = d3.select(this).classed("pie", true)
+
+                arcs = g.selectAll("path.arc")
+                    .data(pie)
+
+                arcsEnter = arcs.enter()
+                    .append("path")
+                    .attr("class", "arc")
+                    .style("opacity", 1e-6)
+
+                arcsExit = d3.transition(arcs.exit())
+                    .style("opacity", 1e-6)
+                    .remove()
+
                 arcsUpdate = d3.transition(arcs)
-                debugger
-                arcsUpdate.attr("d", layer.arc())
+                    .style("opacity", 1)
+
+                # Apply the color styling
+                arcsUpdate.attr("d", arc)
+                    .attr("fill", (point, index) -> scales.color(attrs.color(point, index)))
+
+
+
             )
 
-        scales = {}
+        scales =
+            color: d3.scale.category20
 
         attrs =
-            outerRadius: 200
-            innerRadius: 50
+            outerRadius: 100
+            innerRadius: 10
+            location: "center"
+            locationMargin: 10
             arc: d3.svg.arc()
             pie: d3.layout.pie()
+            color: (point, pointIndex) -> point.data
 
         AA = attrAccessor.bind(attrs, layer)
         layer.outerRadius = AA("outerRadius")
         layer.innerRadius = AA("innerRadius")
         layer.arc = AA("arc")
         layer.pie = AA("pie")
+        layer.location = AA("location")
+        layer.color = AA("color")
         layer.scales = -> scales
+        layer.position = (layer, width, height, margins) ->
+            switch attrs.location
+                when "center"
+                    layer.attr("transform", "translate(" + (width / 2) - attrs.outerRadius + "," + (height / 2) - attrs.outerRadius + ")")
+
 
         layer
 
