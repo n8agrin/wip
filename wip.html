@@ -21,7 +21,6 @@
         .plot {
             width: 600px;
             height: 400px;
-            border: 1px dotted purple;
         }
 
         #pie {
@@ -43,12 +42,16 @@
 
         #pie-legend div {
             display: inline-block;
+            vertical-align: middle;
         }
 
         #pie-legend div.icon {
-            width: 10px;
-            height: 10px;
+            width: 14px;
+            height: 14px;
             margin-right: 10px;
+            -webkit-border-radius: 4px;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -66,7 +69,6 @@
         var plot = rene.plot()
             .addLayer(lineLayer)
             .addLayer(scatterLayer);
-
 
         // d3.select("#scatter")
         //     .datum([data, data])
@@ -94,34 +96,53 @@
         var pie = rene.plot()
             .addLayer(p2)
             .legend(function(layers, scales) {
-                var legendUl = d3.select("#pie-legend ul");
-                var lis = legendUl.selectAll("li")
-                    .data(layers.datum());
+                    var legendUl = d3.select("#pie-legend ul");
+                    var lis = legendUl.selectAll("li")
+                        .data(layers.datum());
 
-                var lisEnter = lis.enter()
-                        .append("li")
-                        .style("opacity", 1e-6);
+                    var lisEnter = lis.enter()
+                            .append("li")
+                            .style("opacity", 1e-6);
 
-                    lisEnter.append("div")
-                        .classed("icon", true);
+                        lisEnter.append("div")
+                            .classed("icon", true);
 
-                    lisEnter.append("div")
-                        .classed("text", true)
+                    lis.selectAll("div.icon")
+                        .data(Object);
+
+                    d3.transition(lis).style("opacity", 1);
+
+                    var textDivs = lis.selectAll("div.text")
+                        .data(function(d) { return [d]; });
+
+                    var textDivsEnter = textDivs.enter()
+                        .append("div")
+                        .classed("text", true);
+
+                    d3.transition(textDivs)
                         .text(function(d) {
+                            console.log("text d", d)
                             return d;
                         });
 
-                lis.selectAll("div.icon")
-                    .style("background", function(d) { return scales.color(d) });
+                    var iconDivs = lis.selectAll("div.icon")
+                        .data(function(d) {
+                            return [d];
+                        });
 
-                d3.transition(lis)
-                    .style("opacity", 1);
+                    var iconDivsEnter = iconDivs.enter()
+                        .append("div")
+                        .classed("icon", true);
+
+                    d3.transition(iconDivs)
+                        .style("background", function(d) { return scales.color(d) });
             });
 
         var pieData = [10,20,30,40,50];
         var pieData2 = [150,400,500];
         d3.select("#pie")
             .datum([pieData])
+            .transition()
             .call(pie);
 
         // setInterval(function() {

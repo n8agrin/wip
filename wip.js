@@ -71,9 +71,9 @@
             scales.y.range([panelHeight, 0]);
             yAxis = d3.svg.axis().scale(scales.y).orient("left");
           }
-          svg.select("g").attr("transform", utils.translate(margin.left, margin.top));
+          svg.select("g").attr("transform", utils.translate(attrs.margin.left, attrs.margin.top));
           layers.each(function(d, i) {
-            return d3.select(this).transition().duration(attrs.layerDuration).delay(attrs.layerDelay * i).call(attrs.layers[i], scales);
+            return d3.transition(d3.select(this)).call(attrs.layers[i], scales);
           });
           layers.each(function(d, i) {
             return attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin);

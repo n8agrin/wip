@@ -62,13 +62,11 @@ rene =
                     yAxis = d3.svg.axis().scale(scales.y).orient("left")
 
                 # hey margins are good
-                svg.select("g").attr("transform", utils.translate(margin.left, margin.top))
+                svg.select("g").attr("transform", utils.translate(attrs.margin.left, attrs.margin.top))
 
                 # render each layer
                 layers.each((d, i) ->
-                    d3.select(this).transition()
-                        .duration(attrs.layerDuration)
-                        .delay(attrs.layerDelay * i)
+                    d3.transition(d3.select(this))
                         .call(attrs.layers[i], scales))
 
                 layers.each((d, i) ->
