@@ -40,7 +40,7 @@
               (_base = attrs.scales)[aesthetic] || (_base[aesthetic] = scale);
             }
           }
-          scales = {};
+          scales = attrs.scales;
           layers.each(function(d, i) {
             var aesthetic, layerData, scale, scaleData, _ref3, _results;
             layer = attrs.layers[i];
@@ -89,8 +89,8 @@
           right: 20
         },
         layers: [],
-        scales: {},
         size: [],
+        scales: {},
         layerDuration: 500,
         layerDelay: 200,
         legend: function() {}
@@ -102,6 +102,7 @@
       chart.layerDelay = AA("layerDelay");
       chart.legend = AA("legend");
       chart.scales = AA("scales");
+      chart.inactiveData = AA("inactiveData");
       chart.addLayer = function(layer) {
         attrs.layers.push(layer);
         return chart;

@@ -35,7 +35,7 @@ rene =
                         attrs.scales[aesthetic] ||= scale
 
                 # train the scales with each layer of data
-                scales = {}
+                scales = attrs.scales
                 layers.each((d, i) ->
                     layer = attrs.layers[i]
                     for aesthetic, scale of attrs.scales
@@ -78,8 +78,8 @@ rene =
         attrs =
             margin: {top: 20, bottom: 20, left: 20, right: 20}
             layers: []
-            scales: {}
             size: []
+            scales: {}
             layerDuration: 500
             layerDelay: 200
             legend: ->
@@ -91,6 +91,7 @@ rene =
         chart.layerDelay = AA("layerDelay")
         chart.legend = AA("legend")
         chart.scales = AA("scales")
+        chart.inactiveData = AA("inactiveData")
 
         chart.addLayer = (layer) ->
             attrs.layers.push(layer)

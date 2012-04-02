@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <title>rene</title>
-    <script src="https://raw.github.com/mbostock/d3/master/d3.v2.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./d3.v2.js" type="text/javascript" charset="utf-8"></script>
     <script type="text/javascript" charset="utf-8" src="wip.js"></script>
 
     <script type="text/javascript" charset="utf-8">
@@ -38,6 +38,10 @@
 
         #pie-legend li {
             list-style-type: none;
+        }
+
+        #pie-legend li.inactive {
+            opacity: 0.2;
         }
 
         #pie-legend div {
@@ -110,6 +114,7 @@
                     lis.selectAll("div.icon")
                         .data(Object);
 
+                    d3.transition(lis.exit()).style("opacity", 1e-6).remove();
                     d3.transition(lis).style("opacity", 1);
 
                     var textDivs = lis.selectAll("div.text")
@@ -121,7 +126,6 @@
 
                     d3.transition(textDivs)
                         .text(function(d) {
-                            console.log("text d", d)
                             return d;
                         });
 
@@ -136,6 +140,26 @@
 
                     d3.transition(iconDivs)
                         .style("background", function(d) { return scales.color(d) });
+
+                    var chart = this;
+                    lis.on("click", function(d, i) {
+                        var li = d3.select(this);
+                        var data = layers.datum();
+                        var newData = pieData.concat();
+
+                        if (li.classed("inactive")) {
+                            li.classed("inactive", false);
+                            newData.splice(i, 0, d);
+                        } else {
+                            li.classed("inactive", true);
+                            newData.splice(i, 1);
+                        }
+
+                        d3.select("#pie")
+                            .datum([newData])
+                            .transition()
+                            .call(pie);
+                    });
             });
 
         var pieData = [10,20,30,40,50];
