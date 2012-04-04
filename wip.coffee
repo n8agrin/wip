@@ -17,7 +17,7 @@ utils =
     translate: (x, y) ->
         ["translate(", String(x), ",", String(y), ")"].join("")
 
-rene =
+rene2 =
 
     plot: ->
         chart = (selection) ->
@@ -32,14 +32,12 @@ rene =
                 # add the appropriate scales for each layer
                 for layer in attrs.layers
                     for aesthetic, scale of layer.scales()
-                        attrs.scales[aesthetic] ||= scale
+                        attrs.scales[aesthetic] ||= scale()
 
                 # train the scales with each layer of data
-                scales = attrs.scales
                 layers.each((d, i) ->
                     layer = attrs.layers[i]
                     for aesthetic, scale of attrs.scales
-                        scale = scales[aesthetic] ||= scale()
                         if layer[aesthetic]
                             layerData = d.map(layer[aesthetic]())
                             scaleData = scale.domain()
@@ -48,18 +46,19 @@ rene =
                 svgNode = svg.node()
                 panelWidth = svgNode.clientWidth - (attrs.margin.left + attrs.margin.right)
                 panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom)
+                console.log("panel w/h", panelWidth, panelHeight)
 
                 # train the ranges
-                if scales.x
-                    scales.x.range([0, panelWidth])
+                if attrs.scales.x
+                    attrs.scales.x.range([0, panelWidth])
                     xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
                     svg.select(".x.axis")
                         .attr("transform", utils.translate(0, panelWidth))
                         .call(xAxis)
 
-                if scales.y
-                    scales.y.range([panelHeight, 0])
-                    yAxis = d3.svg.axis().scale(scales.y).orient("left")
+                if attrs.scales.y
+                    attrs.scales.y.range([panelHeight, 0])
+                    yAxis = d3.svg.axis().scale(attrs.scales.y).orient("left")
 
                 # hey margins are good
                 svg.select("g").attr("transform", utils.translate(attrs.margin.left, attrs.margin.top))
@@ -67,12 +66,12 @@ rene =
                 # render each layer
                 layers.each((d, i) ->
                     d3.transition(d3.select(this))
-                        .call(attrs.layers[i], scales))
+                        .call(attrs.layers[i], attrs.scales, panelWidth, panelHeight))
 
                 layers.each((d, i) ->
                     attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin))
 
-                attrs.legend.call(chart, layers, scales)
+                attrs.legend.call(chart, layers, attrs.scales)
             )
 
         attrs =
@@ -264,15 +263,25 @@ rene =
         return layer
 
     pie: ->
-        layer = (g, scales) ->
+        layer = (g, scales, width, height) ->
             g.each((d, i) ->
+                pieData = d.map(attrs.value)
                 pie = attrs.pie
-                arc = attrs.arc.outerRadius(layer.outerRadius()).innerRadius(layer.innerRadius())
 
-                g = d3.select(this).classed("pie", true)
+                outerRadius = attrs.outerRadius
+                innerRadius = attrs.innerRadius
+                if typeof outerRadius is "function"
+                    outerRadius = outerRadius(width, height)
+                if typeof innerRadius is "function"
+                    innerRadius = innerRadius(width, height)
+
+                arc = attrs.arc.outerRadius(outerRadius).innerRadius(innerRadius)
+
+                g = d3.select(this)
+                    .classed("pie", true)
 
                 arcs = g.selectAll("path.arc")
-                    .data(pie)
+                    .data(pie(pieData))
 
                 arcsEnter = arcs.enter()
                     .append("path")
@@ -302,6 +311,8 @@ rene =
             arc: d3.svg.arc()
             pie: d3.layout.pie()
             color: (point, pointIndex) -> point.data
+            value: (v) -> v
+            label: (l) -> l
 
         AA = attrAccessor.bind(attrs, layer)
         layer.outerRadius = AA("outerRadius")
@@ -310,6 +321,9 @@ rene =
         layer.pie = AA("pie")
         layer.location = AA("location")
         layer.color = AA("color")
+        layer.value = AA("value")
+        layer.label = AA("label")
+
         layer.scales = -> scales
         layer.position = (layer, width, height, margins) ->
             switch attrs.location
@@ -321,6 +335,6 @@ rene =
         layer
 
 if module?
-    module.exports = rene
+    module.exports = rene2
 else
-    this.rene = rene
+    this.rene2 = rene2

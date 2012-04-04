@@ -1,5 +1,5 @@
 (function() {
-  var attrAccessor, ordinalScales, rene, utils;
+  var attrAccessor, ordinalScales, rene2, utils;
 
   attrAccessor = function(retval, name) {
     var _this = this;
@@ -18,12 +18,12 @@
     }
   };
 
-  rene = {
+  rene2 = {
     plot: function() {
       var AA, attrs, chart;
       chart = function(selection) {
         return selection.each(function(datasets) {
-          var aesthetic, gEnter, layer, layers, panelHeight, panelWidth, scale, scales, svg, svgNode, xAxis, yAxis, _base, _i, _len, _ref, _ref2;
+          var aesthetic, gEnter, layer, layers, panelHeight, panelWidth, scale, svg, svgNode, xAxis, yAxis, _base, _i, _len, _ref, _ref2;
           svg = d3.select(this).selectAll("svg").data([datasets]);
           gEnter = svg.enter().append("svg").attr("class", "plot").append("g");
           gEnter.append("g").attr("class", "x axis");
@@ -37,10 +37,9 @@
             _ref2 = layer.scales();
             for (aesthetic in _ref2) {
               scale = _ref2[aesthetic];
-              (_base = attrs.scales)[aesthetic] || (_base[aesthetic] = scale);
+              (_base = attrs.scales)[aesthetic] || (_base[aesthetic] = scale());
             }
           }
-          scales = attrs.scales;
           layers.each(function(d, i) {
             var aesthetic, layerData, scale, scaleData, _ref3, _results;
             layer = attrs.layers[i];
@@ -48,7 +47,6 @@
             _results = [];
             for (aesthetic in _ref3) {
               scale = _ref3[aesthetic];
-              scale = scales[aesthetic] || (scales[aesthetic] = scale());
               if (layer[aesthetic]) {
                 layerData = d.map(layer[aesthetic]());
                 scaleData = scale.domain();
@@ -62,23 +60,24 @@
           svgNode = svg.node();
           panelWidth = svgNode.clientWidth - (attrs.margin.left + attrs.margin.right);
           panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom);
-          if (scales.x) {
-            scales.x.range([0, panelWidth]);
+          console.log("panel w/h", panelWidth, panelHeight);
+          if (attrs.scales.x) {
+            attrs.scales.x.range([0, panelWidth]);
             xAxis = d3.svg.axis().scale(scales.x).orient("bottom");
             svg.select(".x.axis").attr("transform", utils.translate(0, panelWidth)).call(xAxis);
           }
-          if (scales.y) {
-            scales.y.range([panelHeight, 0]);
-            yAxis = d3.svg.axis().scale(scales.y).orient("left");
+          if (attrs.scales.y) {
+            attrs.scales.y.range([panelHeight, 0]);
+            yAxis = d3.svg.axis().scale(attrs.scales.y).orient("left");
           }
           svg.select("g").attr("transform", utils.translate(attrs.margin.left, attrs.margin.top));
           layers.each(function(d, i) {
-            return d3.transition(d3.select(this)).call(attrs.layers[i], scales);
+            return d3.transition(d3.select(this)).call(attrs.layers[i], attrs.scales, panelWidth, panelHeight);
           });
           layers.each(function(d, i) {
             return attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin);
           });
-          return attrs.legend.call(chart, layers, scales);
+          return attrs.legend.call(chart, layers, attrs.scales);
         });
       };
       attrs = {
@@ -304,13 +303,22 @@
     },
     pie: function() {
       var AA, attrs, layer, scales;
-      layer = function(g, scales) {
+      layer = function(g, scales, width, height) {
         return g.each(function(d, i) {
-          var arc, arcs, arcsEnter, arcsExit, arcsUpdate, pie;
+          var arc, arcs, arcsEnter, arcsExit, arcsUpdate, innerRadius, outerRadius, pie, pieData;
+          pieData = d.map(attrs.value);
           pie = attrs.pie;
-          arc = attrs.arc.outerRadius(layer.outerRadius()).innerRadius(layer.innerRadius());
+          outerRadius = attrs.outerRadius;
+          innerRadius = attrs.innerRadius;
+          if (typeof outerRadius === "function") {
+            outerRadius = outerRadius(width, height);
+          }
+          if (typeof innerRadius === "function") {
+            innerRadius = innerRadius(width, height);
+          }
+          arc = attrs.arc.outerRadius(outerRadius).innerRadius(innerRadius);
           g = d3.select(this).classed("pie", true);
-          arcs = g.selectAll("path.arc").data(pie);
+          arcs = g.selectAll("path.arc").data(pie(pieData));
           arcsEnter = arcs.enter().append("path").attr("class", "arc").style("opacity", 1e-6);
           arcsExit = d3.transition(arcs.exit()).style("opacity", 1e-6).remove();
           arcsUpdate = d3.transition(arcs).style("opacity", 1);
@@ -331,6 +339,12 @@
         pie: d3.layout.pie(),
         color: function(point, pointIndex) {
           return point.data;
+        },
+        value: function(v) {
+          return v;
+        },
+        label: function(l) {
+          return l;
         }
       };
       AA = attrAccessor.bind(attrs, layer);
@@ -340,6 +354,8 @@
       layer.pie = AA("pie");
       layer.location = AA("location");
       layer.color = AA("color");
+      layer.value = AA("value");
+      layer.label = AA("label");
       layer.scales = function() {
         return scales;
       };
@@ -356,9 +372,9 @@
   };
 
   if (typeof module !== "undefined" && module !== null) {
-    module.exports = rene;
+    module.exports = rene2;
   } else {
-    this.rene = rene;
+    this.rene2 = rene2;
   }
 
 }).call(this);

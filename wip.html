@@ -68,9 +68,9 @@
     </div>
     <script type="text/javascript" charset="utf-8">
         var data = [[0,0], [1, 1], [2,2], [3, 3], [3,3], [4,4], [5,5]];
-        var lineLayer = rene.line().interpolate("cardinal");
-        var scatterLayer = rene.scatter();
-        var plot = rene.plot()
+        var lineLayer = rene2.line().interpolate("cardinal");
+        var scatterLayer = rene2.scatter();
+        var plot = rene2.plot()
             .addLayer(lineLayer)
             .addLayer(scatterLayer);
 
@@ -89,15 +89,15 @@
         //             .call(plot);
         // }, 1800)
 
-        var p1 = rene.pie()
+        var p1 = rene2.pie()
             .innerRadius(10)
             .outerRadius(50);
 
-        var p2 = rene.pie()
+        var p2 = rene2.pie()
             .innerRadius(30)
             .outerRadius(110);
 
-        var pie = rene.plot()
+        var pie = rene2.plot()
             .addLayer(p2)
             .legend(function(layers, scales) {
                     var legendUl = d3.select("#pie-legend ul");
