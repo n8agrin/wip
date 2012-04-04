@@ -23,6 +23,11 @@
             height: 400px;
         }
 
+        .plot text {
+            font-family: Helvetica, sans-serif;
+            font-size: 12px;
+        }
+
         #pie {
             position: relative;
         }
@@ -57,6 +62,18 @@
             -moz-border-radius: 4px;
             border-radius: 4px;
         }
+
+        .axis .domain{
+            fill: none;
+            stroke-width: 1px;
+            stroke: #000;
+            stroke-dasharray: 2, 2;
+        }
+
+        .axis {
+            shape-rendering: crispEdges;
+        }
+
     </style>
 </head>
 <body>
@@ -68,19 +85,18 @@
     </div>
     <script type="text/javascript" charset="utf-8">
         var data = [[0,0], [1, 1], [2,2], [3, 3], [3,3], [4,4], [5,5]];
-        var lineLayer = rene2.line().interpolate("cardinal");
+        var lineLayer = rene2.line().interpolate("linear");
         var scatterLayer = rene2.scatter();
         var plot = rene2.plot()
             .addLayer(lineLayer)
             .addLayer(scatterLayer);
 
-        // d3.select("#scatter")
-        //     .datum([data, data])
-        //     .call(plot);
+        d3.select("#scatter")
+            .datum([data, data])
+            .call(plot);
 
         // setInterval(function() {
         //     var remapped = data.map(function(c) { return [c[0] * Math.random(), c[1] * Math.random()]; });
-        //     console.log('remapped', remapped)
         //
         //     var s = d3.select("#scatter");
         //         s.datum([remapped, remapped]);
@@ -88,6 +104,11 @@
         //             .duration(1000)
         //             .call(plot);
         // }, 1800)
+
+        //
+        // Pie chart
+        //
+        //
 
         var p1 = rene2.pie()
             .innerRadius(10)

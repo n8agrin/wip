@@ -27,6 +27,7 @@
           svg = d3.select(this).selectAll("svg").data([datasets]);
           gEnter = svg.enter().append("svg").attr("class", "plot").append("g");
           gEnter.append("g").attr("class", "x axis");
+          gEnter.append("g").attr("class", "y axis");
           layers = svg.select("g").selectAll("g.layer").data(Object);
           layers.enter().append("g").attr("class", "layer").attr("id", function(d, i) {
             return "layer" + i;
@@ -63,12 +64,13 @@
           console.log("panel w/h", panelWidth, panelHeight);
           if (attrs.scales.x) {
             attrs.scales.x.range([0, panelWidth]);
-            xAxis = d3.svg.axis().scale(scales.x).orient("bottom");
-            svg.select(".x.axis").attr("transform", utils.translate(0, panelWidth)).call(xAxis);
+            xAxis = d3.svg.axis().scale(attrs.scales.x).orient("bottom");
+            svg.select(".x.axis").attr("transform", utils.translate(0, panelHeight)).call(xAxis);
           }
           if (attrs.scales.y) {
             attrs.scales.y.range([panelHeight, 0]);
             yAxis = d3.svg.axis().scale(attrs.scales.y).orient("left");
+            svg.select(".y.axis").call(yAxis);
           }
           svg.select("g").attr("transform", utils.translate(attrs.margin.left, attrs.margin.top));
           layers.each(function(d, i) {
@@ -84,7 +86,7 @@
         margin: {
           top: 20,
           bottom: 20,
-          left: 20,
+          left: 30,
           right: 20
         },
         layers: [],
@@ -153,6 +155,7 @@
       layer.scales = function() {
         return scales;
       };
+      layer.position = function() {};
       return layer;
     },
     line: function() {
@@ -203,6 +206,7 @@
       layer.scales = function() {
         return scales;
       };
+      layer.position = function() {};
       return layer;
     },
     area: function() {
@@ -257,18 +261,7 @@
       var attrs, layer, scales, _a;
       layer = function(g, scales) {
         return g.each(function(data) {
-          var lines, linesEnter, linesExit, linesUpdate, pathFn;
-          g = d3.select(this);
-          lines = g.selectAll("path").data([g.datum()]);
-          linesEnter = lines.enter().append("path");
-          linesExit = d3.transition(lines.exit());
-          linesUpdate = d3.transition(lines);
-          pathFn = d3.svg.area().interpolate("basis").x(function(d) {
-            return scales.x(layer.x()(d));
-          }).y(function(d) {
-            return scales.y(layer.y()(d));
-          });
-          return linesUpdate.attr("d", pathFn);
+          return g = d3.select(this);
         });
       };
       attrs = {

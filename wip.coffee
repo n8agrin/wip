@@ -18,13 +18,13 @@ utils =
         ["translate(", String(x), ",", String(y), ")"].join("")
 
 rene2 =
-
     plot: ->
         chart = (selection) ->
             selection.each((datasets) ->
                 svg = d3.select(this).selectAll("svg").data([datasets])
                 gEnter = svg.enter().append("svg").attr("class", "plot").append("g")
                 gEnter.append("g").attr("class", "x axis")
+                gEnter.append("g").attr("class", "y axis")
 
                 layers = svg.select("g").selectAll("g.layer").data(Object)
                 layers.enter().append("g").attr("class", "layer").attr("id", (d, i) -> "layer" + i)
@@ -51,14 +51,19 @@ rene2 =
                 # train the ranges
                 if attrs.scales.x
                     attrs.scales.x.range([0, panelWidth])
-                    xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
+                    xAxis = d3.svg.axis().scale(attrs.scales.x).orient("bottom")
                     svg.select(".x.axis")
-                        .attr("transform", utils.translate(0, panelWidth))
+                        .attr("transform", utils.translate(0, panelHeight))
                         .call(xAxis)
 
                 if attrs.scales.y
                     attrs.scales.y.range([panelHeight, 0])
-                    yAxis = d3.svg.axis().scale(attrs.scales.y).orient("left")
+                    yAxis = d3.svg.axis()
+                        .scale(attrs.scales.y)
+                        .orient("left")
+
+                    svg.select(".y.axis")
+                        .call(yAxis)
 
                 # hey margins are good
                 svg.select("g").attr("transform", utils.translate(attrs.margin.left, attrs.margin.top))
@@ -75,7 +80,7 @@ rene2 =
             )
 
         attrs =
-            margin: {top: 20, bottom: 20, left: 20, right: 20}
+            margin: {top: 20, bottom: 20, left: 30, right: 20}
             layers: []
             size: []
             scales: {}
@@ -136,6 +141,8 @@ rene2 =
         layer.scales = ->
             scales
 
+        layer.position = ->
+
         return layer
 
     line: ->
@@ -178,6 +185,8 @@ rene2 =
 
         layer.scales = ->
             scales
+
+        layer.position = ->
 
         return layer
 
@@ -226,16 +235,6 @@ rene2 =
         layer = (g, scales) ->
             g.each((data)->
                 g = d3.select(this)
-                lines = g.selectAll("path").data([g.datum()])
-                linesEnter = lines.enter().append("path")
-                linesExit = d3.transition(lines.exit())
-                linesUpdate = d3.transition(lines)
-
-                pathFn = d3.svg.area().interpolate("basis")
-                     .x((d) -> scales.x(layer.x()(d)))
-                     .y((d) -> scales.y(layer.y()(d)))
-
-                linesUpdate.attr("d", pathFn)
             )
 
         attrs =
