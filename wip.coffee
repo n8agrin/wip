@@ -5,14 +5,6 @@ attrAccessor = (retval, name) ->
         this[name] = v
         retval || this
 
-ordinalScales = [
-    d3.scale.ordinal,
-    d3.scale.category10,
-    d3.scale.category20,
-    d3.scale.category20b,
-    d3.scale.category20c
-]
-
 utils =
     translate: (x, y) ->
         ["translate(", String(x), ",", String(y), ")"].join("")
@@ -25,8 +17,9 @@ rene2 =
                 gEnter = svg.enter().append("svg").attr("class", "plot").append("g")
                 gEnter.append("g").attr("class", "x axis")
                 gEnter.append("g").attr("class", "y axis")
+                gEnter.append("g").attr("class", "geoms")
 
-                layers = svg.select("g").selectAll("g.layer").data(Object)
+                layers = svg.select("g.geoms").selectAll("g.layer").data(Object)
                 layers.enter().append("g").attr("class", "layer").attr("id", (d, i) -> "layer" + i)
 
                 # add the appropriate scales for each layer
@@ -38,15 +31,20 @@ rene2 =
                 layers.each((d, i) ->
                     layer = attrs.layers[i]
                     for aesthetic, scale of attrs.scales
+                        console.log("aesthetic", aesthetic)
                         if layer[aesthetic]
                             layerData = d.map(layer[aesthetic]())
                             scaleData = scale.domain()
-                            scale.domain(d3.extent(layerData.concat(scaleData))))
+                            if aesthetic is "color"
+                                for dp in layerData
+                                    scaleData.push(dp) if dp not in scaleData
+                                scale.domain(scaleData)
+                            else
+                                scale.domain(d3.extent(layerData.concat(scaleData))))
 
                 svgNode = svg.node()
                 panelWidth = svgNode.clientWidth - (attrs.margin.left + attrs.margin.right)
                 panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom)
-                console.log("panel w/h", panelWidth, panelHeight)
 
                 # train the ranges
                 if attrs.scales.x
@@ -76,7 +74,7 @@ rene2 =
                 layers.each((d, i) ->
                     attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin))
 
-                attrs.legend.call(chart, layers, attrs.scales)
+                attrs.legend.call(chart, layers, svg, attrs.scales)
             )
 
         attrs =
@@ -264,8 +262,8 @@ rene2 =
     pie: ->
         layer = (g, scales, width, height) ->
             g.each((d, i) ->
-                pieData = d.map(attrs.value)
                 pie = attrs.pie
+                pieData = pie(d.map(attrs.value))
 
                 outerRadius = attrs.outerRadius
                 innerRadius = attrs.innerRadius
@@ -280,7 +278,7 @@ rene2 =
                     .classed("pie", true)
 
                 arcs = g.selectAll("path.arc")
-                    .data(pie(pieData))
+                    .data(d)
 
                 arcsEnter = arcs.enter()
                     .append("path")
@@ -295,8 +293,8 @@ rene2 =
                     .style("opacity", 1)
 
                 # Apply the color styling
-                arcsUpdate.attr("d", arc)
-                    .attr("fill", (point, index) -> scales.color(attrs.color(point, index)))
+                arcsUpdate.attr("d", (d, i) -> arc(pieData[i]))
+                    .attr("fill", (d, i) -> scales.color(attrs.color(d, i)))
             )
 
         scales =
@@ -329,7 +327,7 @@ rene2 =
                 when "center"
                     layer.attr("transform", utils.translate(width / 2, height / 2))
                 when "left"
-                    layer.attr("transform", utils.translate(attrs.outerRadius, height / 2))
+                    layer.attr("transform", utils.translate(attrs.outerRadius(width, height), height / 2))
 
         layer
 

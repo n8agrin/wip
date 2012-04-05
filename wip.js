@@ -1,5 +1,6 @@
 (function() {
-  var attrAccessor, ordinalScales, rene2, utils;
+  var attrAccessor, rene2, utils,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   attrAccessor = function(retval, name) {
     var _this = this;
@@ -9,8 +10,6 @@
       return retval || _this;
     };
   };
-
-  ordinalScales = [d3.scale.ordinal, d3.scale.category10, d3.scale.category20, d3.scale.category20b, d3.scale.category20c];
 
   utils = {
     translate: function(x, y) {
@@ -28,7 +27,8 @@
           gEnter = svg.enter().append("svg").attr("class", "plot").append("g");
           gEnter.append("g").attr("class", "x axis");
           gEnter.append("g").attr("class", "y axis");
-          layers = svg.select("g").selectAll("g.layer").data(Object);
+          gEnter.append("g").attr("class", "geoms");
+          layers = svg.select("g.geoms").selectAll("g.layer").data(Object);
           layers.enter().append("g").attr("class", "layer").attr("id", function(d, i) {
             return "layer" + i;
           });
@@ -42,16 +42,25 @@
             }
           }
           layers.each(function(d, i) {
-            var aesthetic, layerData, scale, scaleData, _ref3, _results;
+            var aesthetic, dp, layerData, scale, scaleData, _j, _len2, _ref3, _results;
             layer = attrs.layers[i];
             _ref3 = attrs.scales;
             _results = [];
             for (aesthetic in _ref3) {
               scale = _ref3[aesthetic];
+              console.log("aesthetic", aesthetic);
               if (layer[aesthetic]) {
                 layerData = d.map(layer[aesthetic]());
                 scaleData = scale.domain();
-                _results.push(scale.domain(d3.extent(layerData.concat(scaleData))));
+                if (aesthetic === "color") {
+                  for (_j = 0, _len2 = layerData.length; _j < _len2; _j++) {
+                    dp = layerData[_j];
+                    if (__indexOf.call(scaleData, dp) < 0) scaleData.push(dp);
+                  }
+                  _results.push(scale.domain(scaleData));
+                } else {
+                  _results.push(scale.domain(d3.extent(layerData.concat(scaleData))));
+                }
               } else {
                 _results.push(void 0);
               }
@@ -61,7 +70,6 @@
           svgNode = svg.node();
           panelWidth = svgNode.clientWidth - (attrs.margin.left + attrs.margin.right);
           panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom);
-          console.log("panel w/h", panelWidth, panelHeight);
           if (attrs.scales.x) {
             attrs.scales.x.range([0, panelWidth]);
             xAxis = d3.svg.axis().scale(attrs.scales.x).orient("bottom");
@@ -79,7 +87,7 @@
           layers.each(function(d, i) {
             return attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin);
           });
-          return attrs.legend.call(chart, layers, attrs.scales);
+          return attrs.legend.call(chart, layers, svg, attrs.scales);
         });
       };
       attrs = {
@@ -299,8 +307,8 @@
       layer = function(g, scales, width, height) {
         return g.each(function(d, i) {
           var arc, arcs, arcsEnter, arcsExit, arcsUpdate, innerRadius, outerRadius, pie, pieData;
-          pieData = d.map(attrs.value);
           pie = attrs.pie;
+          pieData = pie(d.map(attrs.value));
           outerRadius = attrs.outerRadius;
           innerRadius = attrs.innerRadius;
           if (typeof outerRadius === "function") {
@@ -311,12 +319,14 @@
           }
           arc = attrs.arc.outerRadius(outerRadius).innerRadius(innerRadius);
           g = d3.select(this).classed("pie", true);
-          arcs = g.selectAll("path.arc").data(pie(pieData));
+          arcs = g.selectAll("path.arc").data(d);
           arcsEnter = arcs.enter().append("path").attr("class", "arc").style("opacity", 1e-6);
           arcsExit = d3.transition(arcs.exit()).style("opacity", 1e-6).remove();
           arcsUpdate = d3.transition(arcs).style("opacity", 1);
-          return arcsUpdate.attr("d", arc).attr("fill", function(point, index) {
-            return scales.color(attrs.color(point, index));
+          return arcsUpdate.attr("d", function(d, i) {
+            return arc(pieData[i]);
+          }).attr("fill", function(d, i) {
+            return scales.color(attrs.color(d, i));
           });
         });
       };
@@ -357,7 +367,7 @@
           case "center":
             return layer.attr("transform", utils.translate(width / 2, height / 2));
           case "left":
-            return layer.attr("transform", utils.translate(attrs.outerRadius, height / 2));
+            return layer.attr("transform", utils.translate(attrs.outerRadius(width, height), height / 2));
         }
       };
       return layer;
