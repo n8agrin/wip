@@ -87,7 +87,7 @@
           layers.each(function(d, i) {
             return attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin);
           });
-          return attrs.legend.call(chart, layers, svg, attrs.scales);
+          return attrs.legend.call(chart, layers, attrs.scales, panelWidth, panelHeight);
         });
       };
       attrs = {

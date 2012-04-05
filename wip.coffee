@@ -18,7 +18,6 @@ rene2 =
                 gEnter.append("g").attr("class", "x axis")
                 gEnter.append("g").attr("class", "y axis")
                 gEnter.append("g").attr("class", "geoms")
-
                 layers = svg.select("g.geoms").selectAll("g.layer").data(Object)
                 layers.enter().append("g").attr("class", "layer").attr("id", (d, i) -> "layer" + i)
 
@@ -74,7 +73,7 @@ rene2 =
                 layers.each((d, i) ->
                     attrs.layers[i].position(d3.select(this), panelWidth, panelHeight, attrs.margin))
 
-                attrs.legend.call(chart, layers, svg, attrs.scales)
+                attrs.legend.call(chart, layers, attrs.scales, panelWidth, panelHeight)
             )
 
         attrs =
