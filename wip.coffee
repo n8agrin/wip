@@ -30,13 +30,17 @@ rene2 =
                 layers.each((d, i) ->
                     layer = attrs.layers[i]
                     for aesthetic, scale of attrs.scales
-                        console.log("aesthetic", aesthetic)
                         if layer[aesthetic]
                             layerData = d.map(layer[aesthetic]())
                             scaleData = scale.domain()
                             if aesthetic is "color"
                                 for dp in layerData
                                     scaleData.push(dp) if dp not in scaleData
+                                scale.domain(scaleData)
+                            else if scale.rangeBand
+                                # Ordinal scales
+                                for point in layerData
+                                    scaleData.push(point) if point not in scaleData
                                 scale.domain(scaleData)
                             else
                                 scale.domain(d3.extent(layerData.concat(scaleData))))
@@ -48,6 +52,10 @@ rene2 =
                 # train the ranges
                 if attrs.scales.x
                     attrs.scales.x.range([0, panelWidth])
+
+                    if attrs.scales.x.rangeBand?
+                        attrs.scales.x.rangeBands([0, panelWidth], 0.1)
+
                     xAxis = d3.svg.axis().scale(attrs.scales.x).orient("bottom")
                     svg.select(".x.axis")
                         .attr("transform", utils.translate(0, panelHeight))
@@ -187,51 +195,25 @@ rene2 =
 
         return layer
 
-    area: ->
-        layer = (g, scales) ->
-            g.each((data)->
-
-                g = d3.select(this)
-                lines = g.selectAll("path").data([g.datum()])
-                linesEnter = lines.enter().append("path")
-                linesExit = d3.transition(lines.exit())
-                linesUpdate = d3.transition(lines)
-
-                pathFn = d3.svg.area().interpolate("basis")
-                     .x((d) -> scales.x(layer.x()(d)))
-                     .y((d) -> scales.y(layer.y()(d)))
-
-                linesUpdate.attr("d", pathFn)
-            )
-
-        attrs =
-            x: (d) -> d[0]
-            y: (d) -> d[1]
-            color: (d) -> d[2]
-            size: (d) -> d[3]
-
-        scales =
-            x: d3.scale.linear
-            y: d3.scale.linear
-            color: d3.scale.category20
-            size: d3.scale.linear
-
-        _a = attrAccessor.bind(attrs, layer)
-
-        layer.x = _a("x")
-        layer.y = _a("y")
-        layer.color = _a("color")
-        layer.size = _a("size")
-
-        layer.scales = ->
-            scales
-
-        return layer
-
     bar: ->
-        layer = (g, scales) ->
-            g.each((data)->
+        layer = (g, scales, w, h) ->
+            g.each((d, i) ->
                 g = d3.select(this)
+
+                bars = g.selectAll("rect")
+                    .data(d)
+
+                barsEnter = bars.enter()
+                    .append("rect")
+
+                barsExit = d3.transition(bars.exit())
+                    .remove()
+
+                barsUpdate = d3.transition(bars)
+                    .attr("x", (d) -> scales.x(attrs.x(d)))
+                    .attr("y", (d) -> scales.y(attrs.y(d)))
+                    .attr("height", (d) -> h - scales.y(attrs.y(d)))
+                    .attr("width", -> rangeBands(scales.x))
             )
 
         attrs =
@@ -241,7 +223,7 @@ rene2 =
             size: (d) -> d[3]
 
         scales =
-            x: d3.scale.linear
+            x: d3.scale.ordinal
             y: d3.scale.linear
             color: d3.scale.category20
             size: d3.scale.linear
@@ -252,9 +234,9 @@ rene2 =
         layer.y = _a("y")
         layer.color = _a("color")
         layer.size = _a("size")
-
-        layer.scales = ->
-            scales
+        layer.scales = -> scales
+        layer.position = ->
+        layer.interval = (a) -> a
 
         return layer
 

@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Rene Tests</title>
+		<link rel="stylesheet" href="https://raw.github.com/visionmedia/mocha/master/mocha.css" />
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script src="https://raw.github.com/LearnBoost/expect.js/d2440da086bf8dc38c6085641f23b968a0f48b29/expect.js"></script>
+		<script src="https://raw.github.com/visionmedia/mocha/master/mocha.js"></script>
+		<script>mocha.setup('bdd')</script>
+        <script src="https://raw.github.com/mbostock/d3/gh-pages/d3.v2.min.js"></script>
+        <script src="build/rene.js" type="text/javascript" charset="utf-8"></script>
+
+        <script type="text/javascript" charset="utf-8">
+            window.rene = require('rene');
+        </script>
+
+		<!-- Import the tests!! -->
+
+
+		<script>
+			$(function () { mocha.run(); });
+		</script>
+		<style type="text/css" media="screen">
+			#chart {
+				width: 100px;
+				height: 100px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="mocha"></div>
+		<div id="chart"></div>
+	</body>
+</html>

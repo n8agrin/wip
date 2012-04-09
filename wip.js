@@ -42,13 +42,12 @@
             }
           }
           layers.each(function(d, i) {
-            var aesthetic, dp, layerData, scale, scaleData, _j, _len2, _ref3, _results;
+            var aesthetic, dp, layerData, point, scale, scaleData, _j, _k, _len2, _len3, _ref3, _results;
             layer = attrs.layers[i];
             _ref3 = attrs.scales;
             _results = [];
             for (aesthetic in _ref3) {
               scale = _ref3[aesthetic];
-              console.log("aesthetic", aesthetic);
               if (layer[aesthetic]) {
                 layerData = d.map(layer[aesthetic]());
                 scaleData = scale.domain();
@@ -56,6 +55,14 @@
                   for (_j = 0, _len2 = layerData.length; _j < _len2; _j++) {
                     dp = layerData[_j];
                     if (__indexOf.call(scaleData, dp) < 0) scaleData.push(dp);
+                  }
+                  _results.push(scale.domain(scaleData));
+                } else if (scale.rangeBand) {
+                  for (_k = 0, _len3 = layerData.length; _k < _len3; _k++) {
+                    point = layerData[_k];
+                    if (__indexOf.call(scaleData, point) < 0) {
+                      scaleData.push(point);
+                    }
                   }
                   _results.push(scale.domain(scaleData));
                 } else {
@@ -72,6 +79,9 @@
           panelHeight = svgNode.clientHeight - (attrs.margin.top + attrs.margin.bottom);
           if (attrs.scales.x) {
             attrs.scales.x.range([0, panelWidth]);
+            if (attrs.scales.x.rangeBand != null) {
+              attrs.scales.x.rangeBands([0, panelWidth], 0.1);
+            }
             xAxis = d3.svg.axis().scale(attrs.scales.x).orient("bottom");
             svg.select(".x.axis").attr("transform", utils.translate(0, panelHeight)).call(xAxis);
           }
@@ -217,59 +227,24 @@
       layer.position = function() {};
       return layer;
     },
-    area: function() {
-      var attrs, layer, scales, _a;
-      layer = function(g, scales) {
-        return g.each(function(data) {
-          var lines, linesEnter, linesExit, linesUpdate, pathFn;
-          g = d3.select(this);
-          lines = g.selectAll("path").data([g.datum()]);
-          linesEnter = lines.enter().append("path");
-          linesExit = d3.transition(lines.exit());
-          linesUpdate = d3.transition(lines);
-          pathFn = d3.svg.area().interpolate("basis").x(function(d) {
-            return scales.x(layer.x()(d));
-          }).y(function(d) {
-            return scales.y(layer.y()(d));
-          });
-          return linesUpdate.attr("d", pathFn);
-        });
-      };
-      attrs = {
-        x: function(d) {
-          return d[0];
-        },
-        y: function(d) {
-          return d[1];
-        },
-        color: function(d) {
-          return d[2];
-        },
-        size: function(d) {
-          return d[3];
-        }
-      };
-      scales = {
-        x: d3.scale.linear,
-        y: d3.scale.linear,
-        color: d3.scale.category20,
-        size: d3.scale.linear
-      };
-      _a = attrAccessor.bind(attrs, layer);
-      layer.x = _a("x");
-      layer.y = _a("y");
-      layer.color = _a("color");
-      layer.size = _a("size");
-      layer.scales = function() {
-        return scales;
-      };
-      return layer;
-    },
     bar: function() {
       var attrs, layer, scales, _a;
-      layer = function(g, scales) {
-        return g.each(function(data) {
-          return g = d3.select(this);
+      layer = function(g, scales, w, h) {
+        return g.each(function(d, i) {
+          var bars, barsEnter, barsExit, barsUpdate;
+          g = d3.select(this);
+          bars = g.selectAll("rect").data(d);
+          barsEnter = bars.enter().append("rect");
+          barsExit = d3.transition(bars.exit()).remove();
+          return barsUpdate = d3.transition(bars).attr("x", function(d) {
+            return scales.x(attrs.x(d));
+          }).attr("y", function(d) {
+            return scales.y(attrs.y(d));
+          }).attr("height", function(d) {
+            return h - scales.y(attrs.y(d));
+          }).attr("width", function() {
+            return rangeBands(scales.x);
+          });
         });
       };
       attrs = {
@@ -287,7 +262,7 @@
         }
       };
       scales = {
-        x: d3.scale.linear,
+        x: d3.scale.ordinal,
         y: d3.scale.linear,
         color: d3.scale.category20,
         size: d3.scale.linear
@@ -299,6 +274,10 @@
       layer.size = _a("size");
       layer.scales = function() {
         return scales;
+      };
+      layer.position = function() {};
+      layer.interval = function(a) {
+        return a;
       };
       return layer;
     },
