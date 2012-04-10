@@ -30,6 +30,7 @@
 </head>
 <body>
     <section id="container">
+        <div id="bar" class="chart"></div>
         <div id="scatter" class="chart"></div>
         <div id="line" class="chart"></div>
         <div id="area" class="chart"></div>
@@ -40,6 +41,7 @@
             lineChart,
             areaChart,
             areaLineChart,
+            barChart,
             quotes,
             cleaned;
 
@@ -96,11 +98,29 @@
                 .margin({ top: 20, right: 20, bottom: 20, left: 50 });
 
             areaLineChart.xAxis().ticks(d3.time.months, 2);
-            
+
             // Area + line
             d3.select("#area-line")
                 .datum([cleaned, cleaned])
                 .call(areaLineChart);
+
+
+            var jan = (new Date(2012, 0, 1)).getTime(),
+                mar = (new Date(2012, 2, 1)).getTime();
+            var monthData = cleaned.filter(function(p) {
+                var ptime = p[0].getTime();
+                return ptime >= jan && ptime <= mar;
+            });
+            console.log(monthData.length);
+
+            barChart = rene.chart()
+                .addLayer(rene.bar())
+                .scale('y', d3.scale.linear().domain([9000,9000]))
+                .margin({ top: 20, right: 20, bottom: 20, left: 50 });
+
+            d3.select("#bar")
+                .datum([monthData])
+                .call(barChart);
         });
     </script>
 </body>
