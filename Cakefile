@@ -1,16 +1,15 @@
 fs = require 'fs'
 {spawn, exec} = require 'child_process'
 
-
-
 appFiles = [
     'core/rene',
+    'core/utils',
     'core/chart',
-
+    'layers/scatter',
+    'layers/line',
+    'layers/bar',
     'layers/pie'
 ]
-
-
 
 task 'build', 'Build single application file from source files', ->
     appContents = new Array remaining = appFiles.length
