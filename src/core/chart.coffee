@@ -61,7 +61,7 @@ rene.chart = ->
                         else
                             scale.domain(d3.extent(layerData.concat(scaleData))))
 
-            svgNode = svg.node()
+            svg.attr("width", this.clientWidth).attr("height", this.clientHeight)
             panelWidth = svgNode.clientWidth - (margin.left + margin.right)
             panelHeight = svgNode.clientHeight - (margin.top + margin.bottom)
 
