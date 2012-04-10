@@ -5,7 +5,9 @@ fs = require 'fs'
 
 appFiles = [
     'core/rene',
-    'core/plot'
+    'core/chart',
+
+    'layers/pie'
 ]
 
 
@@ -18,12 +20,12 @@ task 'build', 'Build single application file from source files', ->
             appContents[index] = fileContents
             process() if --remaining is 0
     process = ->
-        fs.writeFile 'lib/app.coffee', appContents.join('\n\n'), 'utf8', (err) ->
+        fs.writeFile 'lib/rene.coffee', appContents.join('\n\n'), 'utf8', (err) ->
             throw err if err
-            exec 'coffee --compile lib/app.coffee', (err, stdout, stderr) ->
+            exec 'coffee --compile lib/rene.coffee', (err, stdout, stderr) ->
                 throw err if err
                 console.log stdout + stderr
-                fs.unlink 'lib/app.coffee', (err) ->
+                fs.unlink 'lib/rene.coffee', (err) ->
                     throw err if err
                     console.log 'Done.'
 

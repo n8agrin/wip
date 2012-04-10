@@ -1,5 +1,4 @@
-rene.plot = ->
-
+rene.chart = ->
     margin = { top: 20, bottom: 20, left: 30, right: 20 }
     layers = []
     scales = {}
