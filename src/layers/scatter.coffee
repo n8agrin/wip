@@ -12,12 +12,10 @@ rene.scatter = ->
         size: d3.scale.linear
 
     layer = (g, scales) ->
-        g.each( ->
-            X = layer.x()
-            Y = layer.y()
-            C = layer.color()
-            S = layer.size()
 
+        g.classed("scatter", true)
+
+        g.each ->
             circles = d3.select(this)
                 .selectAll("circle")
                 .data(Object)
@@ -33,11 +31,10 @@ rene.scatter = ->
             circlesUpdate = d3.transition(circles)
                 .attr("opacity", 1)
 
-            circlesUpdate.attr("cx", (d) -> scales.x(X(d)))
-                .attr("cy", (d) -> scales.y(Y(d)))
-                .attr("r", (d) -> S(d))
-                .style("fill", (d) -> C(d))
-        )
+            circlesUpdate.attr("cx", (d) -> scales.x(x(d)))
+                .attr("cy", (d) -> scales.y(y(d)))
+                .attr("r", (d) -> size(d))
+                .style("fill", (d) -> color(d))
 
     layer.x = (v) ->
         return x if not v

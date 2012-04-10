@@ -12,6 +12,15 @@
             width: 600px;
             height: 400px;
         }
+
+        #container {
+            width: 900px;
+            margin: auto;
+        }
+
+        #area-line .line path {
+            stroke-width: 1px;
+        }
     </style>
 
     <!-- Magic -->
@@ -20,14 +29,19 @@
 
 </head>
 <body>
-    <div id="scatter" class="chart"></div>
+    <section id="container">
+        <div id="scatter" class="chart"></div>
+        <div id="line" class="chart"></div>
+        <div id="area" class="chart"></div>
+        <div id="area-line" class="chart"></div>
+    </section>
     <script type="text/javascript" charset="utf-8">
         var scatterChart,
             lineChart,
             areaChart,
+            areaLineChart,
             quotes,
             cleaned;
-
 
         d3.json("dow.json", function(data) {
             quotes = data.query.results.quote;
@@ -35,15 +49,58 @@
                 return [new Date(d.date), parseFloat(d.Close, 10)];
             }).reverse()
 
+            // Scatter chart
             scatterChart = rene.chart()
-                .addLayer(rene.scatter());
+                .addLayer(rene.scatter())
+                .scale('x', d3.time.scale().domain([]))
+                .scale('y', d3.scale.linear().domain([9000,9000]))
+                .margin({ top: 20, right: 20, bottom: 20, left: 50 });
 
-            scatterChart.scales().x = d3.time.scale().domain([]);
             scatterChart.xAxis().ticks(d3.time.months, 2);
 
             d3.select("#scatter")
                 .datum([cleaned])
                 .call(scatterChart);
+
+            // Line chart
+            lineChart = rene.chart()
+                .addLayer(rene.line())
+                .scale('x', d3.time.scale().domain([]))
+                .scale('y', d3.scale.linear().domain([9000,9000]))
+                .margin({ top: 20, right: 20, bottom: 20, left: 50 });
+
+            lineChart.xAxis().ticks(d3.time.months, 2);
+
+            d3.select("#line")
+                .datum([cleaned])
+                .call(lineChart);
+
+            // Area chart
+            areaChart = rene.chart()
+                .addLayer(rene.area())
+                .scale('x', d3.time.scale().domain([]))
+                .scale('y', d3.scale.linear().domain([9000,9000]))
+                .margin({ top: 20, right: 20, bottom: 20, left: 50 });
+
+            areaChart.xAxis().ticks(d3.time.months, 2);
+
+            d3.select("#area")
+                .datum([cleaned])
+                .call(areaChart);
+
+            areaLineChart = rene.chart()
+                .addLayer(rene.area())
+                .addLayer(rene.line())
+                .scale('x', d3.time.scale().domain([]))
+                .scale('y', d3.scale.linear().domain([9000,9000]))
+                .margin({ top: 20, right: 20, bottom: 20, left: 50 });
+
+            areaLineChart.xAxis().ticks(d3.time.months, 2);
+            
+            // Area + line
+            d3.select("#area-line")
+                .datum([cleaned, cleaned])
+                .call(areaLineChart);
         });
     </script>
 </body>

@@ -7,6 +7,7 @@ appFiles = [
     'core/chart',
     'layers/scatter',
     'layers/line',
+    'layers/area',
     'layers/bar',
     'layers/pie'
 ]
@@ -58,7 +59,7 @@ task 'uglify', 'Build and compress the application file from source', ->
 task 'demo', 'Serve the current dir for working with demos', ->
     http     = require 'http'
     {Server} = require 'node-static'
-    port = 8888
+    port = 8808
 
     fserver = new Server('./')
     http.createServer((req, res) ->
@@ -67,42 +68,3 @@ task 'demo', 'Serve the current dir for working with demos', ->
             fserver.serve(req, res)))
     .listen(port)
     console.log("Listening on #{port}")
-
-
-
-#
-# watch = (callback) ->
-#     timer = null
-#     coffee = spawn 'coffee', ['-w', '-c', '-o', 'lib', 'src']
-#     coffee.stderr.on 'data', (data) ->
-#         process.stderr.write data.toString()
-#     coffee.stdout.on 'data', (data) ->
-#         print data.toString()
-#         if callback?
-#             clearTimeout(timer) if timer?
-#             timebomb = ->
-#                 console.log('timebomb!')
-#                 timer = null
-#                 callback()
-#             timer = setTimeout(timebomb, 100)
-#
-
-#
-#
-# task 'build', 'Build lib/ from src/', ->
-#     build()
-#
-# task 'stitch', 'Build rene files and stitch them together', ->
-#     build stitchRene
-#
-# task 'uglify', 'Build rene and compress to rene.min.js', ->
-#     build ->
-#         stitchRene ->
-#             uglify()
-#
-# task 'watch', 'Watch src/ for changes', ->
-#     watch ->
-#       stitchRene()
-#
-# task 'serve', 'Watch for changes and serve the current dir for examples', ->
-#     serve()

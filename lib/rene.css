@@ -18,3 +18,15 @@ svg text {
     stroke-width: 1px;
     stroke: #000;
 }
+
+/* Line layers */
+.layer.line path {
+    fill: none;
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+/* Area layers */
+.layer.area path {
+    fill: #ccc;
+}

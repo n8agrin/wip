@@ -20,13 +20,13 @@ rene.chart = ->
                 .append("g")
 
             gEnter.append("g")
+                .attr("class", "geoms")
+                    
+            gEnter.append("g")
                 .attr("class", "x axis")
 
             gEnter.append("g")
-                .attr("class", "y axis")
-
-            gEnter.append("g")
-                .attr("class", "geoms")
+                .attr("class", "y axis")                    
 
             layerGroups = svg.select("g.geoms")
                 .selectAll("g.layer")
@@ -62,8 +62,8 @@ rene.chart = ->
                             scale.domain(d3.extent(layerData.concat(scaleData))))
 
             svg.attr("width", this.clientWidth).attr("height", this.clientHeight)
-            panelWidth = svgNode.clientWidth - (margin.left + margin.right)
-            panelHeight = svgNode.clientHeight - (margin.top + margin.bottom)
+            panelWidth = this.clientWidth - (margin.left + margin.right)
+            panelHeight = this.clientHeight - (margin.top + margin.bottom)
 
             # train the ranges
             if scales.x
@@ -120,6 +120,11 @@ rene.chart = ->
     chart.scales = (v) ->
         return scales if not v
         scales = v
+        chart
+
+    chart.scale = (name, fn) ->
+        return scales[name] if not fn
+        scales[name] = fn
         chart
 
     chart.xAxis = (v) ->
