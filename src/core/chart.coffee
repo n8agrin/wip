@@ -5,6 +5,8 @@ rene.chart = ->
     layerDuration = 500
     layerDelay = 200
     legend = ->
+    xAxis = d3.svg.axis().orient("bottom")
+    yAxis = d3.svg.axis().orient("left")
 
     chart = (selection) ->
         selection.each((datasets) ->
@@ -65,22 +67,19 @@ rene.chart = ->
 
             # train the ranges
             if scales.x
-                scales.x.range([0, panelWidth])
-
                 if scales.x.rangeBand?
                     scales.x.rangeBands([0, panelWidth], 0.1)
+                else
+                    scales.x.range([0, panelWidth])
 
-                xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
+                xAxis.scale(scales.x)
                 svg.select(".x.axis")
                     .attr("transform", rene.utils.translate(0, panelHeight))
                     .call(xAxis)
 
             if scales.y
                 scales.y.range([panelHeight, 0])
-                yAxis = d3.svg.axis()
-                    .scale(scales.y)
-                    .orient("left")
-
+                yAxis.scale(scales.y)
                 svg.select(".y.axis")
                     .call(yAxis)
 
@@ -99,32 +98,42 @@ rene.chart = ->
         )
 
     chart.margin = (v) ->
-        return margin if not arguments.length
+        return margin if not v
         margin = v
         chart
 
     chart.layerDuration = (v) ->
-        return layerDuration if not arguments.length
+        return layerDuration if not v
         layerDuration = v
         chart
 
     chart.layerDelay = (v) ->
-        return layerDelay if not arguments.length
+        return layerDelay if not v
         layerDelay = v
         chart
 
     chart.legend = (v) ->
-        return legend if not arguments.length
+        return legend if not v
         legend = v
         chart
 
     chart.scales = (v) ->
-        return scales if not arguments.length
+        return scales if not v
         scales = v
         chart
 
+    chart.xAxis = (v) ->
+        return xAxis if not v
+        xAxis = v
+        chart
+
+    chart.yAxis = (v) ->
+        return yAxis if not v
+        yAxis = v
+        chart
+
     chart.layers = (v) ->
-        return layers if not arguments.length
+        return layers if not v
         layers = v
         chart
 

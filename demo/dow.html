@@ -36,9 +36,10 @@
             }).reverse()
 
             scatterChart = rene.chart()
-                .layers([rene.scatter()]);
+                .addLayer(rene.scatter());
 
             scatterChart.scales().x = d3.time.scale().domain([]);
+            scatterChart.xAxis().ticks(d3.time.months, 2);
 
             d3.select("#scatter")
                 .datum([cleaned])
