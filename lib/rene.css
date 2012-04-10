@@ -1,0 +1,20 @@
+svg text {
+    font-family: Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+.axis {
+    shape-rendering: crispEdges;
+}
+
+.axis .domain{
+    fill: none;
+    stroke-width: 1px;
+    stroke: #000;
+}
+
+.axis line {
+    fill: none;
+    stroke-width: 1px;
+    stroke: #000;
+}

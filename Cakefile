@@ -28,7 +28,18 @@ task 'build', 'Build single application file from source files', ->
                     throw err if err
                     console.log 'Done.'
 
+task 'demo', 'Serve the current dir for working with demos', ->
+    http     = require 'http'
+    {Server} = require 'node-static'
+    port = 8888
 
+    fserver = new Server('./')
+    http.createServer((req, res) ->
+        req.addListener('end', ->
+            console.log('Requesting url', req.url)
+            fserver.serve(req, res)))
+    .listen(port)
+    console.log("Listening on #{port}")
 
 
 
@@ -84,17 +95,7 @@ task 'build', 'Build single application file from source files', ->
 #                 callback()
 #             timer = setTimeout(timebomb, 100)
 #
-# serve = ->
-#     http     = require 'http'
-#     {Server} = require 'node-static'
-#
-#     fserver = new Server('./')
-#     http.createServer((req, res) ->
-#         req.addListener('end', ->
-#             console.log('Requesting url', req.url)
-#             fserver.serve(req, res)))
-#     .listen(8080)
-#     console.log('Listening on 8080')
+
 #
 #
 # task 'build', 'Build lib/ from src/', ->

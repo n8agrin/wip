@@ -72,7 +72,7 @@ rene.chart = ->
 
                 xAxis = d3.svg.axis().scale(scales.x).orient("bottom")
                 svg.select(".x.axis")
-                    .attr("transform", utils.translate(0, panelHeight))
+                    .attr("transform", rene.utils.translate(0, panelHeight))
                     .call(xAxis)
 
             if scales.y
@@ -85,7 +85,7 @@ rene.chart = ->
                     .call(yAxis)
 
             # hey margins are good
-            svg.select("g").attr("transform", utils.translate(margin.left, margin.top))
+            svg.select("g").attr("transform", rene.utils.translate(margin.left, margin.top))
 
             # render each layer
             layerGroups.each((d, i) ->

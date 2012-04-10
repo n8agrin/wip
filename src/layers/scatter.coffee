@@ -1,24 +1,9 @@
 rene.scatter = ->
-    layer = (g, scales) ->
-        g.each( ->
-            g = d3.select(this)
-            circles = g.selectAll("circle").data(Object)
 
-            circlesEnter = circles.enter().append("circle").attr("opacity", 1e-6)
-            circlesExit = d3.transition(circles.exit()).attr("opacity", 0).remove()
-            circlesUpdate = d3.transition(circles).attr("opacity", 1)
-
-            circlesUpdate.attr("cx", (d) -> scales.x(layer.x()(d)))
-                .attr("cy", (d) -> scales.y(layer.y()(d)))
-                .attr("r", 2)
-        )
-
-
-    attrs =
-        x: (d) -> d[0]
-        y: (d) -> d[1]
-        color: (d) -> d[2]
-        size: (d) -> d[3]
+    x = (d) -> d[0]
+    y = (d) -> d[1]
+    color = (d) -> "blue"
+    size = (d) -> 2
 
     scales =
         x: d3.scale.linear
@@ -26,16 +11,55 @@ rene.scatter = ->
         color: d3.scale.category20
         size: d3.scale.linear
 
-    _a = attrAccessor.bind(attrs, layer)
+    layer = (g, scales) ->
+        g.each( ->
+            X = layer.x()
+            Y = layer.y()
+            C = layer.color()
+            S = layer.size()
 
-    layer.x = _a("x")
-    layer.y = _a("y")
-    layer.color = _a("color")
-    layer.size = _a("size")
+            circles = d3.select(this)
+                .selectAll("circle")
+                .data(Object)
 
-    layer.scales = ->
-        scales
+            circlesEnter = circles.enter()
+                .append("circle")
+                .attr("opacity", 1e-6)
 
+            circlesExit = d3.transition(circles.exit())
+                .attr("opacity", 0)
+                .remove()
+
+            circlesUpdate = d3.transition(circles)
+                .attr("opacity", 1)
+
+            circlesUpdate.attr("cx", (d) -> scales.x(X(d)))
+                .attr("cy", (d) -> scales.y(Y(d)))
+                .attr("r", (d) -> S(d))
+                .style("fill", (d) -> C(d))
+        )
+
+    layer.x = (v) ->
+        return x if not v
+        x = d3.functor(v)
+        layer
+
+    layer.y = (v) ->
+        return y if not v
+        y = d3.functor(v)
+        layer
+
+    layer.color = (v) ->
+        return color if not v
+        color = d3.functor(v)
+        layer
+
+    layer.size = (v) ->
+        return size if not v
+        size = d3.functor(v)
+        layer
+
+    layer.scales = -> scales
     layer.position = ->
 
-    return layer
+    layer
