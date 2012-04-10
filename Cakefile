@@ -11,9 +11,10 @@ appFiles = [
     'layers/pie'
 ]
 
-task 'build', 'Build single application file from source files', ->
+build = (cb) ->
     appContents = new Array remaining = appFiles.length
     for file, index in appFiles then do (file, index) ->
+        console.log "Adding #{file}."
         fs.readFile "src/#{file}.coffee", 'utf8', (err, fileContents) ->
             throw err if err
             appContents[index] = fileContents
@@ -26,7 +27,33 @@ task 'build', 'Build single application file from source files', ->
                 console.log stdout + stderr
                 fs.unlink 'lib/rene.coffee', (err) ->
                     throw err if err
-                    console.log 'Done.'
+                    console.log 'Done building.'
+                    cb?()
+
+uglify = (cb) ->
+    uglify = spawn 'uglifyjs', ['-o', 'lib/rene.min.js', 'lib/rene.js']
+    uglify.stderr.on 'data', (data) ->
+        process.stderr.write data.toString()
+    uglify.stdout.on 'data', (data) ->
+        print data.toString()
+    uglify.on 'exit', (code) ->
+        cb?() if code is 0
+
+watch = (cb) ->
+    for file, index in appFiles then do (file, index) ->
+        console.log "Watching #{file}"
+        fs.watchFile "src/#{file}.coffee", {persistent: true, interval: 0}, ->
+            console.log "Noted a change."
+            # cb?()
+
+task 'watch', 'Watch for changes and rebuild', ->
+    watch(build)
+
+task 'build', 'Build single application file from source files', ->
+    build()
+
+task 'uglify', 'Build and compress the application file from source', ->
+    build(uglify)
 
 task 'demo', 'Serve the current dir for working with demos', ->
     http     = require 'http'
@@ -43,42 +70,6 @@ task 'demo', 'Serve the current dir for working with demos', ->
 
 
 
-
-
-
-
-
-
-
-
-
-# build = (callback) ->
-#     coffee = spawn 'coffee', ['-c', '-o', 'lib', 'src']
-#     coffee.stderr.on 'data', (data) ->
-#         process.stderr.write data.toString()
-#     coffee.stdout.on 'data', (data) ->
-#         print data.toString()
-#     coffee.on 'exit', (code) ->
-#         callback?() if code is 0
-#
-# stitchRene = (callback) ->
-#     stitch = require 'stitch'
-#     fs     = require 'fs'
-#     stitch.createPackage({ paths: [__dirname + '/lib'] })
-#         .compile((err, source) ->
-#             fs.writeFile 'build/rene.js', source, (err) ->
-#                 if err then throw err
-#                 console.log('built rene.js')
-#                 callback?())
-#
-# uglify = (callback) ->
-#     uglify = spawn 'uglifyjs', ['-o', 'build/rene.min.js', 'build/rene.js']
-#     uglify.stderr.on 'data', (data) ->
-#         process.stderr.write data.toString()
-#     uglify.stdout.on 'data', (data) ->
-#         print data.toString()
-#     uglify.on 'exit', (code) ->
-#         callback?() if code is 0
 #
 # watch = (callback) ->
 #     timer = null
