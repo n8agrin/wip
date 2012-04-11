@@ -72,16 +72,8 @@ rene.chart = ->
                 else
                     scales.x.range([0, panelWidth])
 
-                xAxis.scale(scales.x)
-                svg.select(".x.axis")
-                    .attr("transform", rene.utils.translate(0, panelHeight))
-                    .call(xAxis)
-
             if scales.y
                 scales.y.range([panelHeight, 0])
-                yAxis.scale(scales.y)
-                svg.select(".y.axis")
-                    .call(yAxis)
 
             # hey margins are good
             svg.select("g").attr("transform", rene.utils.translate(margin.left, margin.top))
@@ -93,6 +85,18 @@ rene.chart = ->
 
             layerGroups.each((d, i) ->
                 layers[i].position(d3.select(this), panelWidth, panelHeight, margin))
+
+            # Render the scales
+            if scales.x
+                xAxis.scale(scales.x)
+                svg.select(".x.axis")
+                    .attr("transform", rene.utils.translate(0, panelHeight))
+                    .call(xAxis)
+
+            if scales.y
+                yAxis.scale(scales.y)
+                svg.select(".y.axis")
+                    .call(yAxis)
 
             legend.call(chart, layerGroups, scales, panelWidth, panelHeight)
         )
