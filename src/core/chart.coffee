@@ -21,12 +21,12 @@ rene.chart = ->
 
             gEnter.append("g")
                 .attr("class", "geoms")
-                    
+
             gEnter.append("g")
                 .attr("class", "x axis")
 
             gEnter.append("g")
-                .attr("class", "y axis")                    
+                .attr("class", "y axis")
 
             layerGroups = svg.select("g.geoms")
                 .selectAll("g.layer")
@@ -67,8 +67,8 @@ rene.chart = ->
 
             # train the ranges
             if scales.x
-                if scales.x.rangeBand?
-                    scales.x.rangeBands([0, panelWidth], 0.1)
+                if scales.x.rangeRoundBands?
+                    scales.x.rangeRoundBands([0, panelWidth], 0.1)
                 else
                     scales.x.range([0, panelWidth])
 

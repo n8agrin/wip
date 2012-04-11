@@ -8,6 +8,7 @@ rene.bar = ->
         y: d3.scale.linear
 
     layer = (g, scales, w, h) ->
+        g.classed("bar", true)
         g.each (d, i) ->
             bars = d3.select(this)
                 .selectAll("rect")

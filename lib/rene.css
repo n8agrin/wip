@@ -30,3 +30,8 @@ svg text {
 .layer.area path {
     fill: #ccc;
 }
+
+/* Bar layers */
+.layer.bar rect {
+    shape-rendering: crispEdges;
+}
