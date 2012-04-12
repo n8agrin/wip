@@ -16,14 +16,15 @@ rene.pie = ->
     layer = (g, scales, width, height) ->
         g.classed("pie", true)
 
-        g.each((d, i) ->
+        g.each (d, i) ->
             pied = pie(d)
+
             arc = arc.outerRadius(outerRadius(width, height))
                 .innerRadius(innerRadius(width, height))
 
             arcs = d3.select(this)
                 .selectAll("path.arc")
-                .data(pie)
+                .data(d)
 
             arcsEnter = arcs.enter()
                 .append("path")
@@ -40,7 +41,6 @@ rene.pie = ->
             # Apply the color styling
             arcsUpdate.attr("d", (d, i) -> arc(pied[i]))
                 .attr("fill", (d, i) -> scales.color(color(d, i)))
-        )
 
     layer.outerRadius = (v) ->
         return outerRadius if not v?
