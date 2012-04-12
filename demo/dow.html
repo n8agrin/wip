@@ -30,6 +30,7 @@
 </head>
 <body>
     <section id="container">
+        <div id="pie" class="chart"></div>
         <div id="bar" class="chart"></div>
         <div id="scatter" class="chart"></div>
         <div id="line" class="chart"></div>
@@ -43,12 +44,26 @@
             areaLineChart,
             barChart,
             quotes,
-            cleaned;
+            cleaned,
+            monthData,
+            dateFmt = d3.time.format("%Y-%m-%d"),
+            pieData = [
+                ["Seg 1", 1000],
+                ["Seg 2", 2000],
+                ["Seg 3", 3000]
+            ];
+
+        var pieChart = rene.chart()
+            .addLayer(rene.pie());
+
+        d3.select("#pie")
+            .datum([pieData])
+            .call(pieChart);
 
         d3.json("dow.json", function(data) {
             quotes = data.query.results.quote;
             cleaned = quotes.map(function(d) {
-                return [new Date(d.date), parseFloat(d.Close, 10)];
+                return [dateFmt.parse(d.date), parseFloat(d.Close, 10)];
             }).reverse()
 
             // Scatter chart
@@ -104,22 +119,28 @@
                 .datum([cleaned, cleaned])
                 .call(areaLineChart);
 
-
+            // Bar chart
             var jan = (new Date(2012, 0, 1)).getTime(),
                 mar = (new Date(2012, 2, 1)).getTime();
-            var monthData = cleaned.filter(function(p) {
+            monthData = cleaned.filter(function(p) {
                 var ptime = p[0].getTime();
                 return ptime >= jan && ptime <= mar;
             });
-            console.log(monthData.length);
+
+            var extent = d3.extent(monthData, function(d) {
+                return d[0];
+            });
+            extent[1] = (new Date(extent[1])).setDate(extent[1].getDate() + 1);
 
             barChart = rene.chart()
-                .addLayer(rene.bar())
+                .addLayer(rene.bar().ranger(d3.time.days))
+                .addLayer(rene.line())
+                .scale('x', d3.time.scale().domain(extent))
                 .scale('y', d3.scale.linear().domain([9000,9000]))
                 .margin({ top: 20, right: 20, bottom: 20, left: 50 });
 
             d3.select("#bar")
-                .datum([monthData])
+                .datum([monthData, monthData])
                 .call(barChart);
         });
     </script>

@@ -1,5 +1,6 @@
 rene.pie = ->
     layer = (g, scales, width, height) ->
+        g.classed("pie", true)
         g.each((d, i) ->
             pie = attrs.pie
             pieData = pie(d.map(attrs.value))
