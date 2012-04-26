@@ -1,3 +1,10 @@
+rene.aesthetics = [
+    'x',
+    'y',
+    'color',
+    'group'
+]
+
 rene.chart = ->
     margin = { top: 20, bottom: 20, left: 30, right: 20 }
     layers = []
@@ -7,8 +14,27 @@ rene.chart = ->
     legend = ->
     xAxis = d3.svg.axis().orient("bottom")
     yAxis = d3.svg.axis().orient("left")
+    xAxisLabel = null
+    yAxisLabel = null
+
+    mapData = (layer, data) ->
+        points = []
+        for point in data
+            newPoint = {}
+            for aesthetic in rene.aesthetics
+                if layer[aesthetic] and (mapped = (layer[aesthetic]())(point))
+                    newPoint[aesthetic] = mapped
+            points.push(newPoint)
+        points
+
+    group = (data) ->
+        if data[0].group
+            (v for k, v of d3.nest().key((d) -> d.group).map(data))
+        else
+            [data]
 
     chart = (selection) ->
+
         selection.each((datasets) ->
             svg = d3.select(this)
                 .selectAll("svg")
@@ -18,6 +44,12 @@ rene.chart = ->
                 .append("svg")
                 .attr("class", "plot")
                 .append("g")
+
+            gEnter.append("g")
+                .attr("class", "x grid")
+
+            gEnter.append("g")
+                .attr("class", "y grid")
 
             gEnter.append("g")
                 .attr("class", "geoms")
@@ -30,7 +62,13 @@ rene.chart = ->
 
             layerGroups = svg.select("g.geoms")
                 .selectAll("g.layer")
-                .data(Object)
+                .data((datasets, i) ->
+                    datasets.map((dataset) ->
+                        mappedData = mapData(layers[i], dataset)
+                        grouped = group(mappedData)
+                        layers[i].position()(grouped)
+                    )
+                )
 
             layerGroups.enter()
                 .append("g")
@@ -47,7 +85,18 @@ rene.chart = ->
                 layer = layers[i]
                 for aesthetic, scale of scales
                     if layer[aesthetic]
-                        layerData = d.map(layer[aesthetic]())
+                        # Positioning may add an x0 or y0 value as a baseline
+                        if aesthetic is 'y' # circle back on x when we can handle date conversions
+                            layerData = d.reduce((prev, curr) ->
+                                prev.concat(curr.map((point) ->
+                                    point[aesthetic] + (point[aesthetic + '0'] || 0)))
+                            , [])
+                        else
+                            layerData = d.reduce((prev, curr) ->
+                                prev.concat(curr.map((point) ->
+                                    point[aesthetic]))
+                            , [])
+
                         scaleData = scale.domain()
                         if aesthetic is "color"
                             for dp in layerData
@@ -89,14 +138,61 @@ rene.chart = ->
             # Render the scales
             if scales.x
                 xAxis.scale(scales.x)
-                svg.select(".x.axis")
-                    .attr("transform", rene.utils.translate(0, panelHeight))
+                svg.select('.x.axis')
+                    .attr('transform', rene.utils.translate(0, panelHeight))
                     .call(xAxis)
+
+                xGridAxis = d3.svg.axis()
+                    .scale(scales.x)
+                    .tickSize(-panelHeight, -panelHeight, -panelHeight)
+                    .orient('bottom')
+
+                svg.select('g.x.grid')
+                    .attr('transform', rene.utils.translate(0, panelHeight))
+                    .call(xGridAxis)
+
+                svg.selectAll('g.x.grid text, g.x.grid path.domain')
+                    .remove()
+
+                if xAxisLabel
+                    xAxis = d3.select('.x.axis')
+                    xLabel = xAxis.selectAll('text.label')
+                        .data([xAxisLabel])
+
+                    xLabelEnter = xLabel.enter()
+                        .append('text')
+                        .classed('label', true)
+
+                    xLabel.text((d) -> d)
+                        .attr('transform', rene.utils.translate(0, 34))
 
             if scales.y
                 yAxis.scale(scales.y)
                 svg.select(".y.axis")
                     .call(yAxis)
+
+                yGridAxis = d3.svg.axis()
+                    .scale(scales.y)
+                    .tickSize(-panelWidth, -panelWidth, -panelWidth)
+                    .orient('left')
+
+                svg.select('g.y.grid')
+                    .call(yGridAxis)
+
+                svg.selectAll('g.y.grid text, g.y.grid path.domain')
+                    .remove()
+
+                if yAxisLabel
+                    yAxis = d3.select('.y.axis')
+                    yLabel = yAxis.selectAll('text.label')
+                        .data([yAxisLabel])
+
+                    yLabelEnter = yLabel.enter()
+                        .append('text')
+                        .classed('label', true)
+
+                    yLabel.text((d) -> d)
+                        .attr("transform", rene.utils.translate(-34, panelHeight) + " rotate(270, 0, 0)")
 
             legend.call(chart, layerGroups, scales, panelWidth, panelHeight)
         )
@@ -139,6 +235,16 @@ rene.chart = ->
     chart.yAxis = (v) ->
         return yAxis if not v
         yAxis = v
+        chart
+
+    chart.xAxisLabel = (v) ->
+        return xAxisLabel if not arguments.length
+        xAxisLabel = v
+        chart
+
+    chart.yAxisLabel = (v) ->
+        return yAxisLabel if not arguments.length
+        yAxisLabel = v
         chart
 
     chart.layers = (v) ->
