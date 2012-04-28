@@ -84,7 +84,7 @@ rene.pie = ->
 
     layer.scales = -> scales
 
-    layer.position = (layer, width, height, margins) ->
+    layer.move = (layer, width, height, margins) ->
         switch location
             when "center"
                 layer.attr("transform", rene.utils.translate(width / 2, height / 2))

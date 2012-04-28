@@ -1,20 +1,21 @@
 rene.bar = ->
 
+    scales =
+        x: d3.scale.ordinal
+        y: d3.scale.linear
+        color: d3.scale.category20
+
     x = (d) -> d[0]
     y = (d) -> d[1]
     color = (d) -> d[1]
     group = (d) -> d[2]
+    move = ->
 
     position = (data) ->
         if data.some((el, idx, ar) -> idx != ar.length - 1 and el.length != ar[idx+1].length)
             data = rene.utils.naiveFill(data)
 
         d3.layout.stack()(data)
-
-    scales =
-        x: d3.scale.ordinal
-        y: d3.scale.linear
-        color: d3.scale.category20
 
     # I really dislike this, but it's necessary to support time scale bar charts.
     ranger = d3.range
@@ -52,6 +53,9 @@ rene.bar = ->
             barGroups.enter()
                 .append("g")
 
+            d3.transition(barGroups.exit())
+                .remove()
+
             bars = barGroups.selectAll("rect")
                 .data(Object)
 
@@ -69,7 +73,6 @@ rene.bar = ->
 
             if scales.color
                 barsUpdate.style("fill", (d) -> scales.color(d.color))
-
 
     layer.x = (v) ->
         return x if not arguments.length
@@ -118,6 +121,9 @@ rene.bar = ->
 
     layer.scales = -> scales
 
-
+    layer.move = (v) ->
+        return move if not arguments.length
+        move = v
+        layer
 
     layer
