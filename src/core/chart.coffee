@@ -104,9 +104,6 @@ rene.chart = ->
             # This allows us to group and position the data once, so we don't have
             # to do it multiple times (speed) and gives us a common format to write
             # viz components to.
-            # mappedData = mapData(datasets)
-            # groupedData = groupData(mappedData)
-            # positionedData = positionData(groupedData)
             positionedData = (layers[idx].mapData(dataset) for dataset, idx in datasets)
 
             layerGroups = svg.select("g.geoms")

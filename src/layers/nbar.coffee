@@ -13,13 +13,10 @@ class rene.layers.Base
         newPoints = []
         for point in dataset
             newPoint = {}
-            for aesthetic in aesthetics
-                newPoint[aesthetic[0]] = aesthetic[1](point)
+            for aesthetic, aesFn of @aesthetics
+                newPoint[aesthetic] = aesFn(point)
             newPoints.push(newPoint)
         position(group(newPoints))
-
-
-
 
 
 class rene.layers.Bar extends rene.layers.Base
