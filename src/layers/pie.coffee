@@ -1,30 +1,39 @@
 rene.pie = ->
 
-    outerRadius = d3.functor(100)
-    innerRadius = d3.functor(10)
-    location = "center"
-    locationMargin = 10
-    arc = d3.svg.arc()
-    pie = d3.layout.pie()
-    color = (d, i) -> d
-    value = (v) -> v
-    label = (l) -> l
-
     scales =
         color: d3.scale.category20
 
-    layer = (g, scales, width, height) ->
+    location = "center"
+    locationMargin = 10
+    arc = d3.svg.arc()
+    pie = d3.layout.pie().value((d) -> d.value)
+    color = (d) -> d[0]
+    value = (d) -> d[1]
+
+    mapData = (dataset) ->
+        aesthetics = [
+            ['value', value],
+            ['color', color]
+        ]
+
+        # Ouch, iterate over every data point...
+        newPoints = []
+        for point in dataset
+            newPoint = {}
+            for aesthetic in aesthetics
+                newPoint[aesthetic[0]] = aesthetic[1](point)
+            newPoints.push(newPoint)
+        [newPoints]
+
+    layer = (g, scales) ->
         g.classed("pie", true)
 
         g.each (d, i) ->
-            pied = pie(d)
-
-            arc = arc.outerRadius(outerRadius(width, height))
-                .innerRadius(innerRadius(width, height))
+            pied = pie(d[0])
 
             arcs = d3.select(this)
                 .selectAll("path.arc")
-                .data(d)
+                .data(pied)
 
             arcsEnter = arcs.enter()
                 .append("path")
@@ -39,18 +48,8 @@ rene.pie = ->
                 .style("opacity", 1)
 
             # Apply the color styling
-            arcsUpdate.attr("d", (d, i) -> arc(pied[i]))
-                .attr("fill", (d, i) -> scales.color(color(d, i)))
-
-    layer.outerRadius = (v) ->
-        return outerRadius if not v?
-        outerRadius = d3.functor(v)
-        layer
-
-    layer.innerRadius = (v) ->
-        return innerRadius if not v?
-        innerRadius = d3.functor(v)
-        layer
+            arcsUpdate.attr("d", (d, i) -> arc(d))
+                .attr("fill", (d, i) -> scales.color(d.data.color))
 
     layer.arc = (v) ->
         return arc if not v?
@@ -77,18 +76,25 @@ rene.pie = ->
         value = v
         layer
 
-    layer.label = (v) ->
-        return label if not v?
-        label = v
+    layer.position = (v) ->
+        return position if not arguments.length
+        position = v
+        layer
+
+    layer.color = (v) ->
+        return color if not arguments.length
+        color = v
         layer
 
     layer.scales = -> scales
+
+    layer.mapData = mapData
 
     layer.move = (layer, width, height, margins) ->
         switch location
             when "center"
                 layer.attr("transform", rene.utils.translate(width / 2, height / 2))
             when "left"
-                layer.attr("transform", rene.utils.translate(outerRadius(width, height), height / 2))
+                layer.attr("transform", rene.utils.translate((arc.outerRadius())(), height / 2))
 
     layer

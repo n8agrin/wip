@@ -1,9 +1,3 @@
-rene.aesthetics = [
-    'x',
-    'y',
-    'color',
-    'group'
-]
 
 rene.chart = ->
     margin = { top: 20, bottom: 20, left: 30, right: 20 }
@@ -18,21 +12,45 @@ rene.chart = ->
     xAxisLabel = null
     yAxisLabel = null
 
-    mapData = (layer, data) ->
-        points = []
-        for point in data
-            newPoint = {}
-            for aesthetic in rene.aesthetics
-                if layer[aesthetic] and (mapped = (layer[aesthetic]())(point))
-                    newPoint[aesthetic] = mapped
-            points.push(newPoint)
-        points
+    mapData = (datasets) ->
+        aesthetics = Object.keys(scales)
+        aesthetics.push('group')
+        newDatasets = []
+        for dataset, datasetIdx in datasets
+            layer = layers[datasetIdx]
 
-    group = (data) ->
-        if data[0]?.group
-            (v for k, v of d3.nest().key((d) -> d.group).map(data))
-        else
-            [data]
+            # Extract the layer accessors to reduce the # of fn calls
+            aestheticFns = {}
+            for aesthetic in aesthetics
+                if layer[aesthetic]
+                    aestheticFns[aesthetic] = layer[aesthetic]()
+
+            # Ouch, iterate over every data point...
+            newPoints = []
+            for point in dataset
+                newPoint = {}
+                for aesthetic, fn of aestheticFns
+                    newPoint[aesthetic] = fn(point)
+                newPoints.push(newPoint)
+
+            newDatasets.push(newPoints)
+
+        newDatasets
+
+    groupData = (datasets) ->
+        newDatasets = []
+        for dataset in datasets
+            if dataset[0]?.group
+                newDatasets.push((v for k, v of d3.nest().key((d) -> d.group).map(dataset)))
+            else
+                newDatasets.push([dataset])
+        newDatasets
+
+    positionData = (datasets) ->
+        newDatasets = []
+        for dataset, datasetIdx in datasets
+            newDatasets.push(((layers[datasetIdx].position?()) || Object)(dataset))
+        newDatasets
 
     # Originally this reset all the scales, but it turned out that color and other
     # scales were important to preserve for legend interaction.
@@ -67,25 +85,38 @@ rene.chart = ->
             gEnter.append("g")
                 .attr("class", "y axis")
 
+            # Add the appropriate scales for each layer
+            for layer in layers
+                for aesthetic, scale of layer.scales()
+                    scales[aesthetic] || chart.scale(aesthetic, scale())
+
+            # Convert data in each layer to a standardized object format:
+            #
+            # {
+            #   x: ...
+            #   y: ...
+            #   y0: ...
+            #   color: ...
+            #   group: ...
+            #   ...
+            # }
+            #
+            # This allows us to group and position the data once, so we don't have
+            # to do it multiple times (speed) and gives us a common format to write
+            # viz components to.
+            # mappedData = mapData(datasets)
+            # groupedData = groupData(mappedData)
+            # positionedData = positionData(groupedData)
+            positionedData = (layers[idx].mapData(dataset) for dataset, idx in datasets)
+
             layerGroups = svg.select("g.geoms")
                 .selectAll("g.layer")
-                .data((datasets, i) ->
-                    datasets.map((dataset) ->
-                        mappedData = mapData(layers[i], dataset)
-                        grouped = group(mappedData)
-                        layers[i].position()(grouped)
-                    )
-                )
+                .data(positionedData)
 
             layerGroups.enter()
                 .append("g")
                 .attr("class", "layer")
                 .attr("id", (d, i) -> "layer" + i)
-
-            # add the appropriate scales for each layer
-            for layer in layers
-                for aesthetic, scale of layer.scales()
-                    scales[aesthetic] || chart.scale(aesthetic, scale())
 
             # Reset the scales
             resetXYScales()
@@ -105,34 +136,23 @@ rene.chart = ->
                 scales.y.range([panelHeight, 0])
 
             # train the scales with each layer of data
-            layerGroups.each((d, i) ->
-                layer = layers[i]
-                for aesthetic, scale of scales
-                    if layer[aesthetic]
-                        # Positioning may add an x0 or y0 value as a baseline
-                        if aesthetic is 'y' # circle back on x when we can handle date conversions
-                            layerData = d.reduce((prev, curr) ->
-                                prev.concat(curr.map((point) ->
-                                    point[aesthetic] + (point[aesthetic + '0'] || 0)))
-                            , [])
+            for aesthetic, scale of scales
+                scaleData = scale.domain().concat()
+                for dataset in positionedData
+                    for dataGroup in dataset
+                        if scale.rangeBand
+                            for point in dataGroup
+                                if point[aesthetic] not in scaleData
+                                    scaleData.push(point[aesthetic])
                         else
-                            layerData = d.reduce((prev, curr) ->
-                                prev.concat(curr.map((point) ->
-                                    point[aesthetic]))
-                            , [])
+                            # Y may be stacked by the y0 attribute
+                            if aesthetic is 'y'
+                                aesValues = (point[aesthetic] + (point[aesthetic + '0'] || 0) for point in dataGroup)
+                            else
+                                aesValues = (point[aesthetic] for point in dataGroup)
 
-                        scaleData = scale.domain()
-                        if aesthetic is "color"
-                            for dp in layerData
-                                scaleData.push(dp) if dp not in scaleData
-                            scale.domain(scaleData)
-                        else if scale.rangeBand
-                            # Ordinal scales
-                            for point in layerData
-                                scaleData.push(point) if point not in scaleData
-                            scale.domain(scaleData)
-                        else
-                            scale.domain(d3.extent(layerData.concat(scaleData))))
+                            scaleData = d3.extent(scaleData.concat(aesValues))
+                scale.domain(scaleData)
 
             # hey margins are good
             svg.select("g").attr("transform", rene.utils.translate(margin.left, margin.top))
@@ -143,7 +163,8 @@ rene.chart = ->
                     .call(layers[i], scales, panelWidth, panelHeight))
 
             layerGroups.each((d, i) ->
-                (layers[i].move())(d3.select(this), panelWidth, panelHeight, margin))
+                layers[i].move(d3.select(this), panelWidth, panelHeight, margin)
+            )
 
             # Render the scales
             if scales.x
