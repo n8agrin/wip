@@ -4,7 +4,34 @@ rene.line = ->
     y = (d) -> d[1]
     color = (d) -> d[2]
     size = (d) -> d[3]
+    group = (d) -> d[2]
     interpolate = "cardinal"
+
+    position = (data) ->
+        data
+
+    mapData = (dataset) ->
+        aesthetics = [
+            ['x', x],
+            ['y', y],
+            ['color', color],
+            ['group', group]
+        ]
+
+        # Ouch, iterate over every data point...
+        newPoints = []
+        for point in dataset
+            newPoint = {}
+            for aesthetic in aesthetics
+                newPoint[aesthetic[0]] = aesthetic[1](point)
+            newPoints.push(newPoint)
+        position(groupData(newPoints))
+
+    groupData = (dataset) ->
+        if dataset[0]?.group
+            (v for k, v of d3.nest().key((d) -> d.group).map(dataset))
+        else
+            [dataset]
 
     scales =
         x: d3.scale.linear
@@ -60,7 +87,13 @@ rene.line = ->
         interpolate = d3.functor(v)
         layer
 
+    layer.group = (v) ->
+        return group if not arguments.length
+        group = v
+        layer
+
     layer.scales = -> scales
-    layer.position = ->
+    layer.mapData = mapData
+    layer.move = ->
 
     layer
