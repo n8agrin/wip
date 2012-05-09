@@ -2,6 +2,7 @@ rene.utils =
     translate: (x, y) -> "translate(#{x},#{y})"
 
     naiveFill: (data) ->
+        return data if not data.some((dataset) -> dataset.length)
 
         samples = data.map((dset) -> dset[0])
 
