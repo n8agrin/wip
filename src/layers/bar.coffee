@@ -12,10 +12,7 @@ rene.bar = ->
     stack = d3.layout.stack()
     move = ->
 
-    position = (data) ->
-        if data.some((el, idx, ar) -> idx != ar.length - 1 and el.length != ar[idx+1].length)
-            data = rene.utils.naiveFill(data)
-        stack(data)
+    position = (data) -> stack(rene.utils.naiveFill(data))
 
     mapData = (dataset) ->
         aesthetics = [
