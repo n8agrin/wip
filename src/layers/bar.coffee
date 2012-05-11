@@ -86,8 +86,8 @@ rene.bar = ->
 
             barsUpdate = d3.transition(bars)
                 .attr("x", (d) -> scales.x(d.x))
-                .attr("y", (d) -> scales.y(d.y0) - (h - scales.y(d.y)))
-                .attr("height", (d) -> h - scales.y(d.y))
+                .attr("y", (d) -> h - scales.y(Math.max(0 + d.y0, d.y + d.y0)))#h - (scales.y(d.y0) + scales.y(d.y)))
+                .attr("height", (d) -> Math.abs(scales.y(d.y) - scales.y(0)))
                 .attr("width", -> width)
 
             if scales.color

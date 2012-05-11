@@ -73,7 +73,10 @@ rene.chart = ->
         if scales.y
 
             if yAxis
-                yAxis.scale(scales.y)
+                ytemp = scales.y.copy()
+                ytemp.range(ytemp.range().concat().reverse())
+                # ytemp.range([0, ytemp.range()[0]])
+                yAxis.scale(ytemp)
                 svg.select(".y.axis")
                     .call(yAxis)
 
@@ -172,7 +175,8 @@ rene.chart = ->
                     scales.x.range([0, panelWidth])
 
             if scales.y
-                scales.y.range([panelHeight, 0])
+                # scales.y.range([panelHeight, 0])
+                scales.y.range([0, panelHeight])
 
             # train the scales with each layer of data
             for aesthetic, scale of scales
