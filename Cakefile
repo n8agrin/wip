@@ -8,6 +8,7 @@ appFiles = [
     'core/nchart',
     'layers/nlayer',
     'layers/nline',
+    'layers/nbar',
     'layers/scatter',
     'layers/line',
     'layers/area',

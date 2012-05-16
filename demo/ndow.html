@@ -69,6 +69,34 @@
                 .datum([cleaned])
                 .call(lineChart);
 
+            // Bar chart
+            var jan = (new Date(2012, 0, 1)).getTime(),
+                mar = (new Date(2012, 2, 1)).getTime();
+
+            monthData = cleaned.filter(function(p) {
+                var ptime = p[0].getTime();
+                return ptime >= jan && ptime <= mar;
+            });
+
+            var extent = d3.extent(monthData, function(d) {
+                return d[0];
+            });
+
+            extent[1] = (new Date(extent[1])).setDate(extent[1].getDate() + 1);
+
+            barChart = new wip.NChart();
+            barLayer = new wip.NBar();
+            barLayer.ranger = d3.time.days;
+            barChart.layers.push(barLayer);
+            barChart.scales.x = d3.time.scale().domain(extent);
+            barChart.scales.y = d3.scale.linear().domain([0,9000]);
+            barChart.margin = { top: 20, right: 20, bottom: 20, left: 50 };
+
+            d3.select("#bar")
+                .datum([monthData])
+                .call(barChart);
+
+
             // areaLineChart = Object.create(lineChart);
             // var areaLayers = [wip.area()];
             // areaLineChart.layers.push(wip.area());

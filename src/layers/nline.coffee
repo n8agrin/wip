@@ -1,6 +1,6 @@
 class rene.NLine extends rene.Layer
 
-    @scales =
+    scales:
         x: d3.time.scale
         y: d3.scale.linear
         color: d3.scale.category20
@@ -14,7 +14,7 @@ class rene.NLine extends rene.Layer
         @size = (d) -> d[3]
         @group = (d) -> d[2]
 
-    render: (group, scales) =>
+    render: (group, scales, width, height) =>
         path = d3.svg.line()
             .interpolate(@interpolate)
             .x((point) -> scales.x(point.x))
@@ -59,5 +59,3 @@ class rene.NLine extends rene.Layer
 
             if scales.color
                 linesUpdate.style('stroke', (pathset) -> if pathset[0]? then scales.color(pathset[0].color))
-
-    apply: => render.apply(this, arguments)

@@ -67,7 +67,7 @@ class rene.NChart
 
     initScales: =>
         for layer in @layers
-            for aes, scale of layer.scales()
+            for aes, scale of layer.scales
                 @scales[aes] || @setScale(aes, scale())
 
     positionData: (data) =>
@@ -114,7 +114,7 @@ class rene.NChart
         scales = @scales
         panelSize = @panelSize
         @layerGroups.each((data, i) ->
-            d3.transition(d3.select(this)).call(layer([i]), scales, panelSize[0], panelSize[1]))
+            d3.transition(d3.select(this)).call(layer(i).render, scales, panelSize[0], panelSize[1]))
 
     renderScales: ->
         panelSize = @panelSize
