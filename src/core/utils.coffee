@@ -43,24 +43,25 @@ rene.utils =
             if kind is "date"
                 newSets.forEach((dset) -> dset.forEach((p) -> p.x = new Date(p.x.valueOf())))
         else
-            # categorical x fill
-            # assumes order is first seen
-            # reoders sets based on x name
-            # [['red', 'green'], ['red', 'blue', 'green']]
-            # becomes
-            # [['red', 'green', 'blue'], ['red', 'green', 'blue']]
-            seen = data.map((dset, di) ->
-                dset.reduce(((p, c) ->
-                    p[c.x] = c
-                    p), {}))
+            # Categorical x fill
+            # Assumes order is first seen, assumes each dataset only has one point per x value.
 
-            cats = d3.merge(seen.map((c) -> Object.keys(c))).sort().reduce(((p, c) ->
-                if p.last != c
-                    p.push(c)
-                    p.last = c
-                p), [])
+            # Store the x values observed and the position they appeared in.
+            seenXValues = {}
+            dataXIndexed = []
+            for dataset in data
+                datasetXIndexed = {}
+                for point, idx in dataset
+                    seenXValues[point.x] or= idx
+                    datasetXIndexed[point.x] = point
+                dataXIndexed.push(datasetXIndexed)
 
-            newSets = data.map((dset, di) -> cats.map((c) -> seen[di][c] or {x: c, y: 0}))
+            newSets = []
+            for dataset in dataXIndexed
+                newDataset = []
+                for x, idx of seenXValues
+                    newDataset[idx] = (dataset[x] or {x: x, y: 0})
+                newSets.push(newDataset)
 
         newSets.forEach((dset, i) -> dset.forEach((p) ->
             for k, v of samples[i]

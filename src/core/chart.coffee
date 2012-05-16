@@ -58,7 +58,6 @@ rene.chart = ->
                     .remove()
 
             if xAxisLabel
-                console.log('x label', xAxisLabel)
                 xLabel = svg.select('.x.axis')
                     .selectAll('text.label')
                     .data([xAxisLabel])
