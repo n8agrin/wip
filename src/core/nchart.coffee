@@ -1,4 +1,13 @@
-class rene.Chart
+class rene.NChart
+
+    callable = (selection) ->
+        chart = this
+        selection.each (data) ->
+            chart.container = d3.select(this)
+            chart.setDimensionsFromSelection(this)
+            chart.initChart(data)
+            chart.render()
+
     constructor: ->
         @layers         = []
         @xAxis          = d3.svg.axis().orient('bottom')
@@ -19,7 +28,6 @@ class rene.Chart
     setScale: (aes, scale) =>
         @scales[aes] = scale
         @originalScales[aes] = scale.copy()
-        this
 
     setContainer: (container) =>
         @container = d3.select(container)
@@ -34,7 +42,7 @@ class rene.Chart
         @svg = @container.selectAll('svg')
             .data([data])
 
-        gEnter = svg.enter()
+        gEnter = @svg.enter()
             .append('svg')
             .attr('class', 'chart')
             .attr('width', @containerSize[0])
@@ -102,12 +110,74 @@ class rene.Chart
             scale.domain(scaleData)
 
     renderLayers: ->
-        layer = (index) =>
-            scales = @scales
-            panelSize = @panelSize
-            layer = @layers[i]
-            (selection) -> layer.call(selection, scales, panelSize[0], panelSize[1])
-        @layerGroups.each((data, i) -> d3.transition(d3.select(this)).call(layer(i)))
+        layer = (index) => @layers[index]
+        scales = @scales
+        panelSize = @panelSize
+        @layerGroups.each((data, i) ->
+            d3.transition(d3.select(this)).call(layer([i]), scales, panelSize[0], panelSize[1]))
+
+    renderScales: ->
+        panelSize = @panelSize
+        if @scales.x
+            @xAxis.scale(@scales.x)
+            @svg.select('.x.axis')
+                .attr('transform', rene.utils.translate(0, panelSize[1]))
+                .call(@xAxis)
+
+        if @scales.y
+            @yAxis.scale(@scales.y)
+            @svg.select('.y.axis')
+                .call(@yAxis)
+
+    renderGrid: ->
+        panelSize = @panelSize
+        if @xGrid
+            @xGrid.scale(@scales.x)
+                .tickSize(-panelSize[1], -panelSize[1], -panelSize[1])
+                .orient('bottom')
+
+            @svg.select('g.x.grid')
+                .attr('transform', rene.utils.translate(0, panelSize[1]))
+                .call(@xGrid)
+
+            @svg.selectAll('g.x.grid text, g.x.grid path.domain')
+                .remove()
+
+        if @yGrid
+            @yGrid.scale(@scales.y)
+                .tickSize(-panelSize[0], -panelSize[0], -panelSize[0])
+                .orient('left')
+
+            @svg.select('g.y.grid')
+                    .call(@yGrid)
+
+            @svg.selectAll('g.y.grid text, g.y.grid path.domain')
+                .remove()
+
+    renderLabels: ->
+        if @xAxisLabel
+            xLabel = @svg.select('.x.axis')
+                .selectAll('text.label')
+                .data([@xAxisLabel])
+
+            xLabelEnter = xLabel.enter()
+                .append('text')
+                .classed('label', true)
+
+            xLabel.text((d) -> d)
+                .attr('transform', rene.utils.translate(0, 34))
+
+        if @yAxisLabel
+            yLabel = @svg.select('.y.axis')
+                .selectAll('text.label')
+                .data([@yAxisLabel])
+
+            yLabelEnter = yLabel.enter()
+                .append('text')
+                .classed('label', true)
+
+            yLabel.text((d) -> d)
+                .attr("transform", rene.utils.translate(-40, @panelSize[1]) + " rotate(270, 0, 0)")
 
     initChart: (data) =>
         @resetXYScales()
@@ -129,35 +199,6 @@ class rene.Chart
         @panelSize[0] = selection.clientWidth - (@margin.left + @margin.right)
         @panelSize[1] = selection.clientHeight - (@margin.top + @margin.bottom)
 
-    call: (selection) ->
-        chart = this
-        selection.each (data) ->
-            chart.container = d3.select(this)
-            chart.setDimensionsFromSelection(this)
-            chart.initChart(data)
-            chart.render()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # Makes the object appear callable by adhearing to the fn.apply interface
+    call: => callable.apply(this, arguments)
+    apply: => callable.apply(this, arguments)
