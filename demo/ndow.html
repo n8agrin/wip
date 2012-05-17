@@ -49,6 +49,17 @@
             dateFmt = d3.time.format("%Y-%m-%d"),
             pieData = [1000, 2000, 3000];
 
+        var pieChart = new wip.Chart;
+        pieChart.xGrid = null;
+        pieChart.yGrid = null;
+
+        var pieLayer = new wip.Pie;
+        pieChart.layers.push(pieLayer);
+
+        d3.select("#pie")
+            .datum([pieData])
+            .call(pieChart);
+
         d3.json('dow.json', function(data) {
             quotes = data.query.results.quote;
             cleaned = quotes.map(function(d) {
@@ -107,12 +118,6 @@
                 .datum([cleaned])
                 .call(areaLineChart);
 
-        // var pieChart = rene.chart()
-        //     .addLayer(rene.pie());
-
-        // d3.select("#pie")
-        //     .datum([pieData])
-        //     .call(pieChart);
 
         // d3.json("dow.json", function(data) {
         //     quotes = data.query.results.quote;
