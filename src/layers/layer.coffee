@@ -21,7 +21,6 @@ class rene.Layer
         @position(@groupData(newPoints))
 
     groupData: (dataset) ->
-        console.log('dataset', dataset)
         if dataset[0]?.group
             (v for k, v of d3.nest().key((d) -> d.group).map(dataset))
         else

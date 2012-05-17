@@ -55,6 +55,28 @@
                 return [dateFmt.parse(d.date), parseFloat(d.Close, 10)];
             }).reverse();
 
+                    //     // Scatter chart
+        //     scatterChart = rene.chart()
+        //         .addLayer(rene.scatter())
+        //         .scale('x', d3.time.scale().domain([]))
+        //         .scale('y', d3.scale.linear().domain([9000,9000]))
+        //         .margin({ top: 20, right: 20, bottom: 20, left: 50 });
+
+        //     scatterChart.xAxis().ticks(d3.time.months, 2);
+
+        //     d3.select("#scatter")
+        //         .datum([cleaned])
+        //         .call(scatterChart);
+
+            var pointLayer = new wip.NPoint;
+            scatterChart = new wip.Chart;
+            scatterChart.layers.push(pointLayer);
+            scatterChart.scales.x = d3.time.scale().domain([]);
+
+            d3.select('#scatter')
+                .datum([cleaned])
+                .call(scatterChart);
+
             // Line chart
             var lineLayer = new wip.NLine;
 
@@ -123,19 +145,6 @@
         //     cleaned = quotes.map(function(d) {
         //         return [dateFmt.parse(d.date), parseFloat(d.Close, 10)];
         //     }).reverse()
-
-        //     // Scatter chart
-        //     scatterChart = rene.chart()
-        //         .addLayer(rene.scatter())
-        //         .scale('x', d3.time.scale().domain([]))
-        //         .scale('y', d3.scale.linear().domain([9000,9000]))
-        //         .margin({ top: 20, right: 20, bottom: 20, left: 50 });
-
-        //     scatterChart.xAxis().ticks(d3.time.months, 2);
-
-        //     d3.select("#scatter")
-        //         .datum([cleaned])
-        //         .call(scatterChart);
 
         //     // Line chart
         //     lineChart = rene.chart()
