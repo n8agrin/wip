@@ -1,54 +1,31 @@
-rene.bar = ->
-    scales =
+class rene.Bar extends rene.Layer
+
+    constructor: ->
+        super
+        @x = (d) -> d[0]
+        @y = (d) -> d[1]
+        @color = (d) -> d[2]
+        @size = (d) -> d[3]
+        @group = (d) -> d[2]
+        @ranger = d3.range
+        @step = d3.functor(1)
+        @stack = d3.layout.stack()
+
+    scales:
         x: d3.scale.ordinal
         y: d3.scale.linear
         color: d3.scale.category20
 
-    x = (d) -> d[0]
-    y = (d) -> d[1]
-    color = (d) -> d[1]
-    group = (d) -> d[2]
+    position: (data) ->
+        @stack(rene.utils.naiveFill(data))
 
-    stack = d3.layout.stack()
-    move = ->
-
-    position = (data) -> stack(rene.utils.naiveFill(data))
-
-    mapData = (dataset) ->
-        aesthetics = [
-            ['x', x],
-            ['y', y],
-            ['color', color],
-            ['group', group]
-        ]
-
-        # Ouch, iterate over every data point...
-        newPoints = []
-        for point in dataset
-            newPoint = {}
-            for aesthetic in aesthetics
-                newPoint[aesthetic[0]] = aesthetic[1](point)
-            newPoints.push(newPoint)
-        position(groupData(newPoints))
-
-    groupData = (dataset) ->
-        if dataset[0]?.group
-            (v for k, v of d3.nest().key((d) -> d.group).map(dataset))
-        else
-            [dataset]
-
-    # I really dislike this, but it's necessary to support time scale bar charts.
-    ranger = d3.range
-    step = d3.functor(1)
-    padding = (barWidth) -> if barWidth <= 4 then 0 else 2
-
-    barWidth = (scales) ->
+    barWidth: (scales) ->
         if scales.x.rangeBand
             scales.x.rangeBand()
         else
             [minDomain, maxDomain] = scales.x.domain()
             [minRange, maxRange] = scales.x.range()
-            bars = ranger(minDomain, maxDomain, step())
+            bars = @ranger(minDomain, maxDomain, @step())
 
             width = 1
             if ((maxRange - minRange) / bars.length) > 1
@@ -59,97 +36,35 @@ rene.bar = ->
                     .rangeBand()
             width
 
-    layer = (g, scales, w, h) ->
-        width = barWidth(scales)
-
-        g.classed("bar", true)
-
-        g.each (d, i) ->
+    render: (group, scales, width, height) =>
+        barWidth = @barWidth(scales)
+        group.classed('bar', true)
+        group.each (dataset, i) ->
             barGroups = d3.select(this)
-                .selectAll("g")
-                .data(d)
+                .selectAll('g')
+                .data(dataset)
 
             barGroups.enter()
-                .append("g")
+                .append('g')
 
             d3.transition(barGroups.exit())
                 .remove()
 
-            bars = barGroups.selectAll("rect")
+            bars = barGroups.selectAll('rect')
                 .data(Object)
 
             barsEnter = bars.enter()
-                .append("rect")
+                .append('rect')
 
             barsExit = d3.transition(bars.exit())
                 .remove()
 
             barsUpdate = d3.transition(bars)
-                .attr("x", (d) -> scales.x(d.x))
-                .attr("y", (d) -> h - scales.y(Math.max(0 + d.y0, d.y + d.y0)))
-                .attr("height", (d) -> Math.abs(scales.y(d.y) - scales.y(0)))
-                .attr("width", -> width)
+                .attr('x', (point) -> scales.x(point.x))
+                .attr('y', (point) -> height - scales.y(Math.max(point.y0, point.y + point.y0)))
+                .attr('height', (point) -> Math.abs(scales.y(point.y) - scales.y(0)))
+                .attr('width', -> barWidth)
 
             if scales.color
-                barsUpdate.style("fill", (d) -> scales.color(d.color))
+                barsUpdate.style('fill', (point) -> scales.color(point.color))
 
-    layer.x = (v) ->
-        return x if not arguments.length
-        x = d3.functor(v)
-        layer
-
-    layer.y = (v) ->
-        return y if not arguments.length
-        y = d3.functor(v)
-        layer
-
-    layer.color = (v) ->
-        return color if not arguments.length
-        color = d3.functor(v)
-        layer
-
-    layer.group = (v) ->
-        return group if not arguments.length
-        group = v
-        layer
-
-    layer.barWidth = (v) ->
-        return bandWidth if not arguments.length
-        bandWidth = d3.functor(v)
-        layer
-
-    layer.ranger = (v) ->
-        return ranger if not arguments.length
-        ranger = d3.functor(v)
-        layer
-
-    layer.step = (v) ->
-        return step if not arguments.length
-        step = d3.functor(v)
-        layer
-
-    layer.padding = (v) ->
-        return padding if not arguments.length
-        padding = d3.functor(v)
-        layer
-
-    layer.position = (v) ->
-        return position if not arguments.length
-        position = v
-        layer
-
-    layer.scales = -> scales
-
-    layer.move = (v) ->
-        return move if not arguments.length
-        move = v
-        layer
-
-    layer.stack = (v) ->
-        return stack if not arguments.length
-        stack = v
-        layer
-
-    layer.mapData = mapData
-
-    layer
