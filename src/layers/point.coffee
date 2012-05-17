@@ -2,11 +2,6 @@ class rene.Point extends rene.Layer
 
     constructor: ->
         super
-        @x = (point) -> point[0]
-        @y = (point) -> point[1]
-        @color = (point) -> point[2]
-        @size = (point) -> point[3]
-        @group = (point) -> point[2]
         @defaultSize = 2
 
     scales:
@@ -45,7 +40,7 @@ class rene.Point extends rene.Layer
                 .attr('opacity', 1)
 
             circlesUpdate.attr('cx', (point) -> scales.x(point.x))
-                .attr('cy', (point) -> scales.y(point.y))
+                .attr('cy', (point) -> height - scales.y(point.y))
                 .attr('r', (point) -> layer.defaultSize)
 
             if scales.color

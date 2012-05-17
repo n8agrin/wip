@@ -1,5 +1,12 @@
 class rene.Layer
 
+    constructor: ->
+        @x = (d) -> d[0]
+        @y = (d) -> d[1]
+        @color = (d) -> d[2]
+        @size = (d) -> d[3]
+        @group = (d) -> d[2]
+
     # Default positioning is the identity function
     position: Object
 

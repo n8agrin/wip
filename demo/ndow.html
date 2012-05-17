@@ -55,83 +55,57 @@
                 return [dateFmt.parse(d.date), parseFloat(d.Close, 10)];
             }).reverse();
 
-                    //     // Scatter chart
-        //     scatterChart = rene.chart()
-        //         .addLayer(rene.scatter())
-        //         .scale('x', d3.time.scale().domain([]))
-        //         .scale('y', d3.scale.linear().domain([9000,9000]))
-        //         .margin({ top: 20, right: 20, bottom: 20, left: 50 });
 
-        //     scatterChart.xAxis().ticks(d3.time.months, 2);
-
-        //     d3.select("#scatter")
-        //         .datum([cleaned])
-        //         .call(scatterChart);
-
-            var pointLayer = new wip.NPoint;
+            // Scatter chart
+            var pointLayer = new wip.Point;
             scatterChart = new wip.Chart;
             scatterChart.layers.push(pointLayer);
             scatterChart.scales.x = d3.time.scale().domain([]);
+            scatterChart.margin = {top: 20, right: 20, bottom: 40, left: 50};
+            scatterChart.xAxis.ticks(d3.time.months, 2);
+            d3.select('#scatter').datum([cleaned]).call(scatterChart);
 
-            d3.select('#scatter')
-                .datum([cleaned])
-                .call(scatterChart);
 
             // Line chart
-            var lineLayer = new wip.NLine;
-
+            var lineLayer = new wip.Line;
             lineChart = new wip.Chart();
             lineChart.layers.push(lineLayer);
             lineChart.scales.x = d3.time.scale().domain([]);
-            lineChart.scales.y = d3.scale.linear().domain([9000,9000]);
             lineChart.margin = {top: 20, right: 20, bottom: 40, left: 50};
             lineChart.xAxis.ticks(d3.time.months, 2);
+            d3.select("#line").datum([cleaned]).call(lineChart);
 
-            d3.select("#line")
-                .datum([cleaned])
-                .call(lineChart);
 
             // Bar chart
             var jan = (new Date(2012, 0, 1)).getTime(),
                 mar = (new Date(2012, 2, 1)).getTime();
-
             monthData = cleaned.filter(function(p) {
                 var ptime = p[0].getTime();
                 return ptime >= jan && ptime <= mar;
             });
-
-            var extent = d3.extent(monthData, function(d) {
-                return d[0];
-            });
-
+            var extent = d3.extent(monthData, function(d) { return d[0]; });
             extent[1] = (new Date(extent[1])).setDate(extent[1].getDate() + 1);
-
             barChart = new wip.Chart();
-            barLayer = new wip.NBar();
+            barLayer = new wip.Bar();
             barLayer.ranger = d3.time.days;
             barChart.layers.push(barLayer);
             barChart.scales.x = d3.time.scale().domain(extent);
-            barChart.scales.y = d3.scale.linear().domain([0,9000]);
             barChart.margin = { top: 20, right: 20, bottom: 20, left: 50 };
-
-            d3.select("#bar")
-                .datum([monthData])
-                .call(barChart);
+            d3.select("#bar").datum([monthData]).call(barChart);
 
 
-            // areaLineChart = Object.create(lineChart);
-            // var areaLayers = [wip.area()];
-            // areaLineChart.layers.push(wip.area());
-            // areaLineChart.layers.push(wip.line());
-            // areaLineChart.scales.x = d3.time.scale().domain([]);
-            // areaLineChart.scales.y = d3.scale.linear().domain([9000,9000]);
-            // areaLineChart.margin = { top: 20, right: 20, bottom: 20, left: 50 };
-            // areaLineChart.xAxis.ticks(d3.time.months, 2);
+            // Area Chart
+            var areaLayer = new wip.Area;
+            areaLineChart = new wip.Chart;
+            areaLineChart.layers.push(areaLayer);
+            areaLineChart.scales.x = d3.time.scale().domain(extent);
+            areaLineChart.margin = { top: 20, right: 20, bottom: 20, left: 50 };
+            areaLineChart.xAxis.ticks(d3.time.months, 2);
 
-            // // Area + line
-            // d3.select("#area-line")
-            //     .datum([cleaned, cleaned])
-            //     .call(areaLineChart.call);
+            // Area + line
+            d3.select("#area")
+                .datum([cleaned])
+                .call(areaLineChart);
 
         // var pieChart = rene.chart()
         //     .addLayer(rene.pie());

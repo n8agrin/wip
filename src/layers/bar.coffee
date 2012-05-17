@@ -2,11 +2,6 @@ class rene.Bar extends rene.Layer
 
     constructor: ->
         super
-        @x = (d) -> d[0]
-        @y = (d) -> d[1]
-        @color = (d) -> d[2]
-        @size = (d) -> d[3]
-        @group = (d) -> d[2]
         @ranger = d3.range
         @step = d3.functor(1)
         @stack = d3.layout.stack()

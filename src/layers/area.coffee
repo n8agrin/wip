@@ -1,81 +1,56 @@
-rene.area = ->
+class rene.Area extends rene.Layer
 
-    x = (d) -> d[0]
-    y = (d) -> d[1]
-    y0 = (d) -> 0
-    y1 = (d) -> 0
-    color = (d) -> d[2]
-    size = (d) -> d[3]
-    interpolate = d3.functor("cardinal")
+    constructor: ->
+        super
+        @y0 = d3.functor(0)
+        @y1 = d3.functor(0)
+        @interpolate = d3.functor('cardinal')
 
-    scales =
+        aes = @aesthetics()
+        aes.push(['y0', @y0])
+        aes.push(['y1', @y1])
+        @aesthetics = ->
+            aes
+
+    scales:
         x: d3.scale.linear
         y: d3.scale.linear
         color: d3.scale.category20
         size: d3.scale.linear
 
-    layer = (g, scales) ->
+    render: (group, scales, width, height) =>
         pathFn = d3.svg.area()
-            .interpolate(interpolate())
-            .x((d) -> scales.x(x(d)))
-            .y((d) -> scales.y(y(d)))
-            .y0((d) -> scales.y(y0(d)))
-            .y1((d) -> scales.y(y(d) + y0(d)))
+            .interpolate(@interpolate())
+            .x((d)  -> scales.x(d.x))
+            .y0((d) -> height - scales.y(d.y0))
+            .y1((d) -> height - scales.y(d.y + d.y0))
 
-        g.classed("area", true)
+        group.classed('area', true)
 
-        g.each (data) ->
-            lines = d3.select(this)
-                .selectAll("path")
-                .data([data])
+        group.each (data) ->
+            areaGroups = d3.select(this)
+                .selectAll('g.area')
+                .data(Object)
 
-            linesEnter = lines.enter()
-                .append("path")
+            areaGroups.enter()
+                .append('g')
+                .attr('class', 'area')
 
-            linesExit = d3.transition(lines.exit())
+            d3.transition(areaGroups.exit())
                 .remove()
 
-            linesUpdate = d3.transition(lines)
+            areas = areaGroups.selectAll('path')
+                .data((pathset) -> [pathset])
 
-            console.log('scaley ', scales.y.range())
-            linesUpdate.attr("d", pathFn.y0(scales.y.range()[0]))
+            areasEnter = areas.enter()
+                .append('path')
 
-    layer.x = (v) ->
-        return x if not v
-        x = d3.functor(v)
-        layer
+            areasExit = d3.transition(areas.exit())
+                .remove()
 
-    layer.y = (v) ->
-        return y if not v
-        y = d3.functor(v)
-        layer
+            areasUpdate = d3.transition(areas)
+            #pathFn.y0(scales.y.range()[0])(d)
+            areasUpdate.attr('d', pathFn)
 
-    layer.y0 = (v) ->
-        return y0 if not v
-        y0 = d3.functor(v)
-        layer
-
-    layer.y1 = (v) ->
-        return y1 if not v
-        y1 = d3.functor(v)
-        layer
-
-    layer.color = (v) ->
-        return color if not v
-        color = d3.functor(v)
-        layer
-
-    layer.size = (v) ->
-        return size if not v
-        size = d3.functor(v)
-        layer
-
-    layer.interpolate = (v) ->
-        return interpolate if not v
-        interpolate = d3.functor(v)
-        layer
-
-    layer.scales = -> scales
-    layer.position = ->
-
-    layer
+            if scales.color
+                areasUpdate.style('fill', (pathset) -> if pathset[0]? then scales.color(pathset[0].color))

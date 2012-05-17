@@ -1,24 +1,20 @@
 class rene.Line extends rene.Layer
 
+    constructor: ->
+        super
+        @interpolate = 'cardinal'
+
     scales:
         x: d3.time.scale
         y: d3.scale.linear
         color: d3.scale.category20
         size: d3.scale.linear
 
-    constructor: ->
-        @interpolate = 'cardinal'
-        @x = (d) -> d[0]
-        @y = (d) -> d[1]
-        @color = (d) -> d[2]
-        @size = (d) -> d[3]
-        @group = (d) -> d[2]
-
     render: (group, scales, width, height) =>
         path = d3.svg.line()
             .interpolate(@interpolate)
             .x((point) -> scales.x(point.x))
-            .y((point) -> scales.y(point.y))
+            .y((point) -> height - scales.y(point.y))
 
         group.classed('line', true)
 
@@ -54,7 +50,6 @@ class rene.Line extends rene.Layer
                 .remove()
 
             linesUpdate = d3.transition(lines)
-
             linesUpdate.attr("d", path)
 
             if scales.color
