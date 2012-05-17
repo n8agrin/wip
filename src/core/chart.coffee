@@ -88,7 +88,7 @@ class rene.Chart
             @scales.x.rangeRoundBands([0, @panelSize[0]], 0.1)
         else
             @scales.x?.range([0, @panelSize[0]])
-        @scales.y?.range([@panelSize[1], 0])
+        @scales.y?.range([0, @panelSize[1]])
 
     trainScaleDomains: (data) =>
         for aesthetic, scale of @scales
@@ -125,7 +125,9 @@ class rene.Chart
                 .call(@xAxis)
 
         if @scales.y
-            @yAxis.scale(@scales.y)
+            yAxisScale = @scales.y.copy()
+            yAxisScale.range(@scales.y.range().concat().reverse())
+            @yAxis.scale(yAxisScale)
             @svg.select('.y.axis')
                 .call(@yAxis)
 

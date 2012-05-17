@@ -9,6 +9,7 @@ class rene.NBar extends rene.Layer
         @group = (d) -> d[2]
         @ranger = d3.range
         @step = d3.functor(1)
+        @stack = d3.layout.stack()
 
     scales:
         x: d3.scale.ordinal
@@ -16,9 +17,7 @@ class rene.NBar extends rene.Layer
         color: d3.scale.category20
 
     position: (data) ->
-        if data.some((el, idx, ar) -> idx != ar.length - 1 and el.length != ar[idx+1].length)
-            data = rene.utils.naiveFill(data)
-        d3.layout.stack()(data)
+        @stack(rene.utils.naiveFill(data))
 
     barWidth: (scales) ->
         if scales.x.rangeBand
@@ -62,8 +61,8 @@ class rene.NBar extends rene.Layer
 
             barsUpdate = d3.transition(bars)
                 .attr('x', (point) -> scales.x(point.x))
-                .attr('y', (point) -> scales.y(point.y0) - (height - scales.y(point.y)))
-                .attr('height', (point) -> height - scales.y(point.y))
+                .attr('y', (point) -> height - scales.y(Math.max(point.y0, point.y + point.y0)))
+                .attr('height', (point) -> Math.abs(scales.y(point.y) - scales.y(0)))
                 .attr('width', -> barWidth)
 
             if scales.color
