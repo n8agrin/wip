@@ -1,4 +1,4 @@
-class rene.NPoint extends rene.Layer
+class rene.Point extends rene.Layer
 
     constructor: ->
         super
