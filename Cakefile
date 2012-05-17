@@ -5,7 +5,6 @@ appFiles = [
     'core/rene',
     'core/utils',
     'core/chart',
-    'core/nchart',
     'layers/nlayer',
     'layers/nline',
     'layers/nbar',

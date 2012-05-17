@@ -58,7 +58,7 @@
             // Line chart
             var lineLayer = new wip.NLine;
 
-            lineChart = new wip.NChart();
+            lineChart = new wip.Chart();
             lineChart.layers.push(lineLayer);
             lineChart.scales.x = d3.time.scale().domain([]);
             lineChart.scales.y = d3.scale.linear().domain([9000,9000]);
@@ -84,7 +84,7 @@
 
             extent[1] = (new Date(extent[1])).setDate(extent[1].getDate() + 1);
 
-            barChart = new wip.NChart();
+            barChart = new wip.Chart();
             barLayer = new wip.NBar();
             barLayer.ranger = d3.time.days;
             barChart.layers.push(barLayer);
