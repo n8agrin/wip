@@ -35,7 +35,7 @@ class rene.Chart
     resetXYScales: =>
         for scaleName in ['x', 'y']
             if @scales[scaleName] and @originalScales[scaleName]
-                @scales[scaleName] = @originalScales[scaleName]
+                @scales[scaleName] = @originalScales[scaleName].copy()
 
     initSVG: (data) =>
         @svg = @container.selectAll('svg')
