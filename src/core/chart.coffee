@@ -3,8 +3,7 @@ class rene.Chart
     callable = (selection) ->
         chart = this
         selection.each (data) ->
-            chart.container = d3.select(this)
-            chart.setDimensionsFromSelection(this)
+            chart.setContainer(this)
             chart.initChart(data)
             chart.render()
 
