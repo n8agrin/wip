@@ -27,8 +27,6 @@ class rene.Chart
     setScale: (aes, scale) =>
         @scales[aes] = scale
         @originalScales[aes] = scale.copy()
-            .domain(scale.domain().concat())
-            .range(scale.range().concat())
 
     setContainer: (container) =>
         @container = d3.select(container)
