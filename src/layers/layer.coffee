@@ -10,6 +10,8 @@ class rene.Layer
     # Default positioning is the identity function
     position: Object
 
+    move: ->
+
     aesthetics: -> [
         ['x', @x],
         ['y', @y],

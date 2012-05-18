@@ -25,10 +25,10 @@ class rene.Pie extends rene.Layer
             arcsEnter = arcs.enter().append('path').attr('class', 'arc').style('opacity', 1e-6)
             arcsExit = d3.transition(arcs.exit()).style('opacity', 1e-6).remove()
             arcsUpdate = d3.transition(arcs).style('opacity', 1)
-            arcsUpdate.attr('d', (d, i) -> layer.arc(d)).attr('fill', (d, i) -> scales.color(d.data.color))        
+            arcsUpdate.attr('d', (d, i) -> layer.arc(d)).attr('fill', (d, i) -> scales.color(d.data.color))
 
-    move: (layer, width, height, margins) ->
-        switch location
+    move: (layer, width, height, margins) =>
+        switch @location
             when "center"
                 layer.attr("transform", rene.utils.translate(width / 2, height / 2))
             when "left"

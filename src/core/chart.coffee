@@ -27,6 +27,8 @@ class rene.Chart
     setScale: (aes, scale) =>
         @scales[aes] = scale
         @originalScales[aes] = scale.copy()
+            .domain(scale.domain().concat())
+            .range(scale.range().concat())
 
     setContainer: (container) =>
         @container = d3.select(container)
@@ -43,7 +45,7 @@ class rene.Chart
 
         gEnter = @svg.enter()
             .append('svg')
-            .attr('class', 'chart')
+            .attr('class', 'plot')
             .attr('width', @containerSize[0])
             .attr('height', @containerSize[1])
             .append('g')
@@ -109,21 +111,27 @@ class rene.Chart
             scale.domain(scaleData)
 
     renderLayers: ->
-        layer = (index) => @layers[index]
-        scales = @scales
-        panelSize = @panelSize
-        @layerGroups.each((data, i) ->
-            d3.transition(d3.select(this)).call(layer(i).render, scales, panelSize[0], panelSize[1]))
+        do ({layers, scales, panelSize} = @) =>
+            @layerGroups.each((data, idx) ->
+                d3.transition(d3.select(this))
+                    .call(layers[idx].render, scales, panelSize[0], panelSize[1]))
+
+    moveLayers: ->
+        # You're going to love this one ;)
+        do ({layers, scales, panelSize, margin} = @) =>
+            @layerGroups.each (data, idx) ->
+                d3.transition(d3.select(this))
+                    .call(layers[idx].move, panelSize[0], panelSize[1], margin)
 
     renderScales: ->
         panelSize = @panelSize
-        if @scales.x
+        if @scales.x and @xAxis
             @xAxis.scale(@scales.x)
             @svg.select('.x.axis')
                 .attr('transform', rene.utils.translate(0, panelSize[1]))
                 .call(@xAxis)
 
-        if @scales.y
+        if @scales.y and @yAxis
             yAxisScale = @scales.y.copy()
             yAxisScale.range(@scales.y.range().concat().reverse())
             @yAxis.scale(yAxisScale)
@@ -194,6 +202,7 @@ class rene.Chart
         @renderScales()
         @renderGrid()
         @renderLabels()
+        @moveLayers()
 
     setDimensionsFromSelection: (selection) =>
         @containerSize = [selection.clientWidth, selection.clientHeight]
