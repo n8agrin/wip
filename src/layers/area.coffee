@@ -5,12 +5,16 @@ class rene.Area extends rene.Layer
         @y0 = d3.functor(0)
         @y1 = d3.functor(0)
         @interpolate = d3.functor('cardinal')
+        @stack = d3.layout.stack()
 
-        aes = @aesthetics()
+    position: (data) ->
+        @stack(rene.utils.naiveFill(data))
+
+    aesthetics: ->
+        aes = super()
         aes.push(['y0', @y0])
         aes.push(['y1', @y1])
-        @aesthetics = ->
-            aes
+        aes
 
     scales:
         x: d3.scale.linear
