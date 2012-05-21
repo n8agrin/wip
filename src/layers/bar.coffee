@@ -5,11 +5,19 @@ class rene.Bar extends rene.Layer
         @ranger = d3.range
         @step = d3.functor(1)
         @stack = d3.layout.stack()
+        @x0 = d3.functor(0)
+        @x1 = d3.functor(0)
 
     scales:
         x: d3.scale.ordinal
         y: d3.scale.linear
         color: d3.scale.category20
+
+    aesthetics: ->
+        aes = super()
+        aes.push(['x0', @x0])
+        aes.push(['x1', @x1])
+        aes
 
     position: (data) ->
         @stack(rene.utils.naiveFill(data))
@@ -45,7 +53,7 @@ class rene.Bar extends rene.Layer
                 .domain(groupDomain)
                 .rangeRoundBands([0, barWidth])
 
-            debugger
+            # debugger
 
             barGroups = d3.select(this)
                 .selectAll('g')
@@ -68,6 +76,8 @@ class rene.Bar extends rene.Layer
 
             barsExit = d3.transition(bars.exit())
                 .remove()
+
+            console.log('grb', groupedRangeBands.rangeBand())
 
             barsUpdate = d3.transition(bars)
                 .attr('x', (point) -> scales.x(point.x))

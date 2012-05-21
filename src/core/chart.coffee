@@ -23,6 +23,7 @@ class rene.Chart
         @layerGroups    = d3.select()
         @scales         = {}
         @originalScales = {}
+        @rangeFn        = "rangeRoundBands"
 
     setScale: (aes, scale) =>
         @scales[aes] = scale
@@ -83,8 +84,8 @@ class rene.Chart
             .attr('id', (d, i) -> "layer#{i}")
 
     trainScaleRanges: =>
-        if @scales.x?.rangeRoundBands?
-            @scales.x.rangeRoundBands([0, @panelSize[0]], 0.1)
+        if @scales.x?[@rangeFn]?
+            @scales.x[@rangeFn]([0, @panelSize[0]], 0.1)
         else
             @scales.x?.range([0, @panelSize[0]])
         @scales.y?.range([0, @panelSize[1]])
