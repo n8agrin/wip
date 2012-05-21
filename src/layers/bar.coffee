@@ -34,13 +34,28 @@ class rene.Bar extends rene.Layer
     render: (group, scales, width, height) =>
         barWidth = @barWidth(scales)
         group.classed('bar', true)
+
         group.each (dataset, i) ->
+            if dataset.length
+                groupDomain = d3.range(d3.max(dataset[dataset.length-1], (d) -> d.x1) + 1)
+            else
+                groupDomain = 0
+
+            groupedRangeBands = d3.scale.ordinal()
+                .domain(groupDomain)
+                .rangeRoundBands([0, barWidth])
+
+            debugger
+
             barGroups = d3.select(this)
                 .selectAll('g')
                 .data(dataset)
 
             barGroups.enter()
                 .append('g')
+
+            d3.transition(barGroups)
+                .attr("transform", (d, i) -> rene.utils.translate(groupedRangeBands(i), 0))
 
             d3.transition(barGroups.exit())
                 .remove()
@@ -58,7 +73,7 @@ class rene.Bar extends rene.Layer
                 .attr('x', (point) -> scales.x(point.x))
                 .attr('y', (point) -> height - scales.y(Math.max(point.y0, point.y + point.y0)))
                 .attr('height', (point) -> Math.abs(scales.y(point.y) - scales.y(0)))
-                .attr('width', -> barWidth)
+                .attr('width', -> groupedRangeBands.rangeBand())
 
             if scales.color
                 barsUpdate.style('fill', (point) -> scales.color(point.color))
