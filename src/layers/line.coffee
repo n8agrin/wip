@@ -2,7 +2,7 @@ class rene.Line extends rene.Layer
 
     constructor: ->
         super
-        @interpolate = 'cardinal'
+        @interpolate = 'monotone'
 
     scales:
         x: d3.time.scale

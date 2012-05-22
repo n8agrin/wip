@@ -4,7 +4,7 @@ class rene.Area extends rene.Layer
         super
         @y0 = d3.functor(0)
         @y1 = d3.functor(0)
-        @interpolate = d3.functor('cardinal')
+        @interpolate = d3.functor('monotone')
         @stack = d3.layout.stack()
 
     position: (data) ->
