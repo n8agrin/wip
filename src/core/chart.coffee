@@ -152,7 +152,10 @@ class rene.Chart
                 .remove()
 
         if @yGrid
-            @yGrid.scale(@scales.y)
+            yAxisScale = @scales.y.copy()
+            yAxisScale.range(@scales.y.range().concat().reverse())
+            debugger
+            @yGrid.scale(yAxisScale)
                 .tickSize(-panelSize[0], -panelSize[0], -panelSize[0])
                 .orient('left')
 
