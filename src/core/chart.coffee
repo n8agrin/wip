@@ -34,9 +34,9 @@ class rene.Chart
         @setDimensionsFromSelection(container)
 
     resetXYScales: =>
-        for scaleName in ['x', 'y']
-            if @scales[scaleName] and @originalScales[scaleName]
-                @scales[scaleName] = @originalScales[scaleName].copy()
+        for name in ['x', 'y']
+            if @scales[name] and @originalScales[name]
+                @scales[name] = @originalScales[name].copy()
 
     initSVG: (data) =>
         @svg = @container.selectAll('svg')
