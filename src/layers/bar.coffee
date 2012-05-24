@@ -40,6 +40,7 @@ class rene.Bar extends rene.Layer
             width
 
     render: (group, scales, width, height) =>
+        debugger
         barWidth = @barWidth(scales)
         group.classed('bar', true)
 
