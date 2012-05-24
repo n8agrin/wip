@@ -2,11 +2,11 @@ class rene.Pie extends rene.Layer
 
     constructor: ->
         @location = 'center'
-        @locationMargin = 10
         @arc = d3.svg.arc().innerRadius(0).outerRadius(200)
         @pie = d3.layout.pie().value((d) -> d.value)
         @color = Object
         @value = Object
+        @pullLeft = 20
 
     scales:
         color: d3.scale.category20
@@ -32,4 +32,7 @@ class rene.Pie extends rene.Layer
             when "center"
                 layer.attr("transform", rene.utils.translate(width / 2, height / 2))
             when "left"
-                layer.attr("transform", rene.utils.translate((@arc.outerRadius())(), height / 2))
+                radius = (@arc.outerRadius())()
+                left = radius - @pullLeft
+                top = radius
+                layer.attr("transform", rene.utils.translate(left, top))

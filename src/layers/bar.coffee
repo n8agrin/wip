@@ -53,8 +53,6 @@ class rene.Bar extends rene.Layer
                 .domain(groupDomain)
                 .rangeRoundBands([0, barWidth])
 
-            # debugger
-
             barGroups = d3.select(this)
                 .selectAll('g')
                 .data(dataset)
